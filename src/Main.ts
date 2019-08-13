@@ -18,7 +18,7 @@ const map = [
     [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-];
+].map(row => new Int8Array(row));
 
 const renderedMap = (() => {
     // buffer canvas
@@ -79,42 +79,51 @@ const playerStep = () => {
     next.position.x = current.position.x + current.speed.x;
     next.position.y = current.position.y + current.speed.y;
 
+    const HORIZONTAL_SPEED = 300;
     if (keys.ArrowLeft) {
-        next.speed.x = -200 / STEPS_PER_SECOND;
+        next.speed.x = -HORIZONTAL_SPEED / STEPS_PER_SECOND;
     } else if (keys.ArrowRight) {
-        next.speed.x = 200 / STEPS_PER_SECOND;
+        next.speed.x = HORIZONTAL_SPEED / STEPS_PER_SECOND;
     } else {
         next.speed.x = 0;
     }
 
     const playerLeftTile1 = Math.floor((next.position.x - 1) / TILE_SIZE);
-    const playerLeftTile2 = Math.floor(next.position.x / TILE_SIZE);
+    const playerLeftTile2 = Math.floor((next.position.x + 1) / TILE_SIZE);
     const playerRightTile1 = Math.floor((next.position.x + 19) / TILE_SIZE);
-    const playerRightTile2 = Math.floor((next.position.x + 21) / TILE_SIZE);
-    const playerTopTile = Math.floor(next.position.y / TILE_SIZE);
+    const playerRightTile2 = Math.floor((next.position.x + 23) / TILE_SIZE);
+    const playerTopTile1 = Math.floor((next.position.y - 1) / TILE_SIZE);
+    const playerTopTile2 = Math.floor(next.position.y / TILE_SIZE);
     const playerBottomTile1 = Math.floor((next.position.y + 19) / TILE_SIZE);
-    const playerBottomTile2 = Math.floor((next.position.y + 21) / TILE_SIZE);
+    const playerBottomTile2 = Math.floor((next.position.y + 23) / TILE_SIZE);
     let touchingGround = false;
 
     for (let i = playerLeftTile2; i <= playerRightTile1; i++) {
         if (map[playerBottomTile2][i]) {
             touchingGround = true;
+            next.position.y = next.position.y | 0;
             break;
         }
     }
 
     if (touchingGround) {
         if (keys.ArrowUp) {
-            next.speed.y = -400 / STEPS_PER_SECOND;
+            const JUMP_POWER = 700;
+            next.speed.y = -JUMP_POWER / STEPS_PER_SECOND;
         } else {
             next.speed.y = 0;
         }
     } else {
-        next.speed.y += 500 / STEPS_PER_SECOND / STEPS_PER_SECOND;
+        const GRAVITY = 2000;
+        const MAX_SPEED = 500 / STEPS_PER_SECOND;
+        next.speed.y += GRAVITY / STEPS_PER_SECOND / STEPS_PER_SECOND;
+        if (next.speed.y > MAX_SPEED) {
+            next.speed.y = MAX_SPEED;
+        }
     }
 
     if (next.speed.x > 0) {
-        for (let i = playerTopTile; i <= playerBottomTile1; i++) {
+        for (let i = playerTopTile2; i <= playerBottomTile1; i++) {
             if (map[i][playerRightTile2]) {
                 next.speed.x = 0;
                 break;
@@ -123,7 +132,7 @@ const playerStep = () => {
     }
 
     if (next.speed.x < 0) {
-        for (let i = playerTopTile; i <= playerBottomTile1; i++) {
+        for (let i = playerTopTile2; i <= playerBottomTile1; i++) {
             if (map[i][playerLeftTile1]) {
                 next.speed.x = 0;
                 break;
@@ -133,7 +142,7 @@ const playerStep = () => {
 
     if (next.speed.y < 0) {
         for (let i = playerLeftTile2; i <= playerRightTile1; i++) {
-            if (map[playerTopTile][i]) {
+            if (map[playerTopTile1][i]) {
                 next.speed.y = 0;
                 break;
             }
