@@ -1,11 +1,11 @@
 import { keys } from "./keys";
+import { createMap, getRendered, collidesWithHorizontalSegment, collidesWithVerticalSegment } from './map';
 
 const canvas = document.getElementsByTagName('canvas')[0];
 const context = canvas.getContext('2d');
-const TILE_SIZE = 48;
 let running = true;
 
-const map = [
+const map = createMap([
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -18,26 +18,7 @@ const map = [
     [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-].map(row => new Int8Array(row));
-
-const renderedMap = (() => {
-    // buffer canvas
-    const mapCanvas = document.createElement('canvas');
-    mapCanvas.width = TILE_SIZE * map[0].length;
-    mapCanvas.height = TILE_SIZE * map.length;
-    const context = mapCanvas.getContext('2d');
-
-    context.fillStyle = 'black';
-    for (let i = 0; i < map.length; i++) {
-        for (let j = 0; j < map[i].length; j++) {
-            if (map[i][j]) {
-                context.fillRect(j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            }
-        }
-    }
-
-    return mapCanvas;
-})();
+]);
 
 const makeState = () => ({
     player: {
@@ -59,7 +40,7 @@ const states = {
 
 const render = () => {
     context.clearRect(0, 0, 800, 600);
-    context.drawImage(renderedMap, 0, 0);
+    context.drawImage(getRendered(map), 0, 0);
 
     context.fillStyle = 'red';
     context.fillRect(states.current.player.position.x, states.current.player.position.y, 20, 20);
@@ -70,7 +51,7 @@ const render = () => {
     stepCount = 0;
 };
 
-const STEPS_PER_SECOND = 240;
+const STEPS_PER_SECOND = 360;
 
 const playerStep = () => {
     const current = states.current.player;
@@ -79,15 +60,19 @@ const playerStep = () => {
     next.position.x = current.position.x + current.speed.x;
     next.position.y = current.position.y + current.speed.y;
 
-    const HORIZONTAL_SPEED = 300;
+    const MAX_HORIZONTAL_SPEED = 300 / STEPS_PER_SECOND;
+    const HORIZONTAL_ACCELERATION = 1200 / STEPS_PER_SECOND / STEPS_PER_SECOND;
     if (keys.ArrowLeft) {
-        next.speed.x = -HORIZONTAL_SPEED / STEPS_PER_SECOND;
+        next.speed.x = Math.max(current.speed.x - HORIZONTAL_ACCELERATION, -MAX_HORIZONTAL_SPEED);
     } else if (keys.ArrowRight) {
-        next.speed.x = HORIZONTAL_SPEED / STEPS_PER_SECOND;
+        next.speed.x = Math.min(current.speed.x + HORIZONTAL_ACCELERATION, MAX_HORIZONTAL_SPEED);
+    } else if (current.speed.x < 0) {
+        next.speed.x = Math.min(0, current.speed.x + HORIZONTAL_ACCELERATION);
     } else {
-        next.speed.x = 0;
+        next.speed.x = Math.max(0, current.speed.x - HORIZONTAL_ACCELERATION);
     }
 
+    /*
     const playerLeftTile1 = Math.floor((next.position.x - 1) / TILE_SIZE);
     const playerLeftTile2 = Math.floor((next.position.x + 1) / TILE_SIZE);
     const playerRightTile1 = Math.floor((next.position.x + 19) / TILE_SIZE);
@@ -96,57 +81,42 @@ const playerStep = () => {
     const playerTopTile2 = Math.floor(next.position.y / TILE_SIZE);
     const playerBottomTile1 = Math.floor((next.position.y + 19) / TILE_SIZE);
     const playerBottomTile2 = Math.floor((next.position.y + 23) / TILE_SIZE);
-    let touchingGround = false;
+    */
+    const top = next.position.y;
+    const left = next.position.x;
+    const right = left + 19;
+    const bottom = top + 19;
+    const nextTop = next.position.y + next.speed.y;
+    const nextLeft = next.position.x + next.speed.x;
+    const nextRight = nextLeft + 20;
+    const nextBottom = nextTop + 20;
 
-    for (let i = playerLeftTile2; i <= playerRightTile1; i++) {
-        if (map[playerBottomTile2][i]) {
-            touchingGround = true;
-            next.position.y = next.position.y | 0;
-            break;
-        }
-    }
-
-    if (touchingGround) {
+    if (collidesWithHorizontalSegment(map, nextBottom, left, right)) {
         if (keys.ArrowUp) {
-            const JUMP_POWER = 700;
-            next.speed.y = -JUMP_POWER / STEPS_PER_SECOND;
+            const JUMP_POWER = 700 / STEPS_PER_SECOND;
+            next.speed.y = -JUMP_POWER;
         } else {
             next.speed.y = 0;
         }
     } else {
-        const GRAVITY = 2000;
+        const GRAVITY = 2000 / STEPS_PER_SECOND / STEPS_PER_SECOND;
         const MAX_SPEED = 500 / STEPS_PER_SECOND;
-        next.speed.y += GRAVITY / STEPS_PER_SECOND / STEPS_PER_SECOND;
+        next.speed.y += GRAVITY;
         if (next.speed.y > MAX_SPEED) {
             next.speed.y = MAX_SPEED;
         }
     }
 
-    if (next.speed.x > 0) {
-        for (let i = playerTopTile2; i <= playerBottomTile1; i++) {
-            if (map[i][playerRightTile2]) {
-                next.speed.x = 0;
-                break;
-            }
-        }
+    if (next.speed.x > 0 && collidesWithVerticalSegment(map, nextRight, top, bottom)) {
+        next.speed.x = 0;
     }
 
-    if (next.speed.x < 0) {
-        for (let i = playerTopTile2; i <= playerBottomTile1; i++) {
-            if (map[i][playerLeftTile1]) {
-                next.speed.x = 0;
-                break;
-            }
-        }
+    if (next.speed.x < 0 && collidesWithVerticalSegment(map, nextLeft, top, bottom)) {
+        next.speed.x = 0;
     }
 
-    if (next.speed.y < 0) {
-        for (let i = playerLeftTile2; i <= playerRightTile1; i++) {
-            if (map[playerTopTile1][i]) {
-                next.speed.y = 0;
-                break;
-            }
-        }
+    if (next.speed.y < 0 && collidesWithHorizontalSegment(map, nextTop, left, right)) {
+        next.speed.y = 0;
     }
 };
 
@@ -161,14 +131,14 @@ const step = (steps: number) => {
 };
 
 let stepCount = 0;
-let previous = null;
+let stepsSinceBeginning = 0;
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
 const loop = (timestamp) => {
-    const steps = Math.max(timestamp ? (timestamp - previous) / MILLISECONDS_PER_STEP : 1, 1);
-    step(steps);
-    previous = timestamp;
+    const currentStep = timestamp / MILLISECONDS_PER_STEP;
+    step(currentStep - stepsSinceBeginning);
+    stepsSinceBeginning = currentStep;
     render();
     window.requestAnimationFrame(loop);
 };
 
-loop(previous);
+loop(0);
