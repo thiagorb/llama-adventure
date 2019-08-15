@@ -12,15 +12,26 @@ const state = {
     ArrowLeft: false,
 };
 
+const keyMap = {
+    ArrowUp: 'ArrowUp',
+    ArrowLeft: 'ArrowLeft',
+    ArrowDown: 'ArrowDown',
+    ArrowRight: 'ArrowRight',
+    w: 'ArrowUp',
+    a: 'ArrowLeft',
+    s: 'ArrowDown',
+    d: 'ArrowRight',
+};
+
 document.addEventListener('keydown', event => {
-    if (event.key in state) {
-        state[event.key] = true;
+    if (keyMap[event.key]) {
+        state[keyMap[event.key]] = true;
     }
 });
 
 document.addEventListener('keyup', event => {
-    if (event.key in state) {
-        state[event.key] = false;
+    if (keyMap[event.key]) {
+        state[keyMap[event.key]] = false;
     }
 });
 
