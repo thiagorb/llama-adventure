@@ -1,11 +1,10 @@
-const TILE_SIZE = 48;
-
 interface Map {
     tiles: Int8Array;
     rows: number;
     cols: number;
-    rendered?: HTMLCanvasElement
-};
+    rendered?: HTMLCanvasElement;
+    tileSize: number;
+}
 
 export const render = (map: Map): HTMLCanvasElement => {
     if (map.rendered) {
@@ -14,15 +13,15 @@ export const render = (map: Map): HTMLCanvasElement => {
 
     // buffer canvas
     const mapCanvas = document.createElement('canvas');
-    mapCanvas.width = TILE_SIZE * map.cols;
-    mapCanvas.height = TILE_SIZE * map.rows;
+    mapCanvas.width = map.tileSize * map.cols;
+    mapCanvas.height = map.tileSize * map.rows;
     const context = mapCanvas.getContext('2d');
 
     context.fillStyle = 'black';
     for (let row = 0; row < map.rows; row++) {
         for (let col = 0; col < map.cols; col++) {
             if (getCellValue(map, col, row)) {
-                context.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                context.fillRect(col * map.tileSize, row * map.tileSize, map.tileSize, map.tileSize);
             }
         }
     }
@@ -31,7 +30,7 @@ export const render = (map: Map): HTMLCanvasElement => {
     return mapCanvas;
 };
 
-export const createMap = (values: number[][]): Map => {
+export const createMap = (values: number[][], tileSize): Map => {
     const rows = values.length;
     const cols = values[0].length;
     const tiles = new Int8Array(cols * rows);
@@ -45,12 +44,13 @@ export const createMap = (values: number[][]): Map => {
     return {
         tiles,
         rows,
-        cols
+        cols,
+        tileSize
     };
 };
 
-export const getCol = (map: Map, x: number) => Math.floor(x / TILE_SIZE);
-export const getRow = (map: Map, y: number) => Math.floor(y / TILE_SIZE);
+export const getCol = (map: Map, x: number) => Math.floor(x / map.tileSize);
+export const getRow = (map: Map, y: number) => Math.floor(y / map.tileSize);
 
 export const getCellValue = (map: Map, col: number, row: number) => {
     return map.tiles[row * map.cols + col];

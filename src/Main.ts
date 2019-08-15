@@ -2,26 +2,36 @@ import { keys } from "./keys";
 import { createMap, getRendered, collidesWithHorizontalSegment, collidesWithVerticalSegment } from './map';
 import {drawSprite, loadSprite} from "./sprites";
 
+const offscreen = document.createElement('canvas');
+offscreen.width = 320;
+offscreen.height = 240;
 const canvas = document.getElementsByTagName('canvas')[0];
-const context = canvas.getContext('2d');
-context.imageSmoothingEnabled = false;
-context.webkitImageSmoothingEnabled = false;
-let running = true;
 
-const map = createMap([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-]);
+const METERS = 12;
+const STEPS_PER_SECOND = 120;
+const METERS_PER_SECOND = METERS / STEPS_PER_SECOND;
+const METERS_PER_SECOND_PER_SECOND = METERS_PER_SECOND / STEPS_PER_SECOND;
+const TILE_SIZE = 2 * METERS;
+const PLAYER_WIDTH = METERS;
+const PLAYER_HEIGHT = 1.5 * METERS;
+
+const map = createMap(
+    [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ],
+    TILE_SIZE
+);
 
 const makeState = () => ({
     player: {
@@ -43,6 +53,10 @@ const states = {
 };
 
 const render = () => {
+    const context = canvas.getContext('2d');
+    context.webkitImageSmoothingEnabled = false;
+    context.mozImageSmoothingEnabled = false;
+    context.imageSmoothingEnabled = false;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(getRendered(map), 0, 0);
 
@@ -58,8 +72,8 @@ const render = () => {
         playerSprite,
         0,
         0,
-        playerSprite.width,
-        playerSprite.height,
+        PLAYER_WIDTH,
+        PLAYER_HEIGHT,
         stepsSinceBeginning * 4 / STEPS_PER_SECOND
     );
     context.restore();
@@ -70,16 +84,14 @@ const render = () => {
     context.fillText(fps.toString(), 20, 100);
 };
 
-const STEPS_PER_SECOND = 120;
-
 let playerSprite = null;
 
 const playerStep = () => {
-    const MAX_HORIZONTAL_SPEED = 150 / STEPS_PER_SECOND;
-    const HORIZONTAL_ACCELERATION = 300 / STEPS_PER_SECOND / STEPS_PER_SECOND;
-    const JUMP_POWER = 300 / STEPS_PER_SECOND;
-    const GRAVITY = 400 / STEPS_PER_SECOND / STEPS_PER_SECOND;
-    const MAX_SPEED = 500 / STEPS_PER_SECOND;
+    const MAX_HORIZONTAL_SPEED = 3 * METERS_PER_SECOND;
+    const HORIZONTAL_ACCELERATION = 6 * METERS_PER_SECOND_PER_SECOND;
+    const JUMP_POWER = 8 * METERS_PER_SECOND;
+    const GRAVITY = 7 * METERS_PER_SECOND_PER_SECOND;
+    const TERMINAL_VELOCITY = 10 * METERS_PER_SECOND;
 
     const current = states.current.player;
     const next = states.next.player;
@@ -116,8 +128,8 @@ const playerStep = () => {
         }
     } else {
         next.speed.y += GRAVITY;
-        if (next.speed.y > MAX_SPEED) {
-            next.speed.y = MAX_SPEED;
+        if (next.speed.y > TERMINAL_VELOCITY) {
+            next.speed.y = TERMINAL_VELOCITY;
         }
     }
 
@@ -170,4 +182,3 @@ setInterval(() => {
     playerSprite = await loadSprite('llama');
     loop(0);
 })();
-

@@ -3,10 +3,28 @@
     <head>
         <meta charset="utf-8"/>
         <title>Game</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-content: center;
+                background: black;
+            }
+
+            #canvas {
+                height: 75vmax;
+                width: 100vmax;
+                transform-origin: 0 0;
+                max-width: 133.333vmin;
+                max-height: 100vmin;
+                image-rendering: pixelated;
+            }
+        </style>
     </head>
-    <body style="position: relative; margin: 0; padding: 0; padding-top: 75%">
-        <div style="width: vmin"></div>
-        <canvas width="400" height="300" style="width: 100%; position: absolute; left: 0; top: 0; height: 100%;"></canvas>
+    <body>
+        <canvas id="canvas" width="320" height="240"></canvas>
         <script src="./src/Main.ts"></script>
     </body>
 </html>
