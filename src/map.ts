@@ -17,12 +17,14 @@ export const render = (map: Map): HTMLCanvasElement => {
     mapCanvas.height = map.tileSize * map.rows;
     const context = mapCanvas.getContext('2d');
 
-    context.fillStyle = 'black';
     for (let row = 0; row < map.rows; row++) {
         for (let col = 0; col < map.cols; col++) {
             if (getCellValue(map, col, row)) {
-                context.fillRect(col * map.tileSize, row * map.tileSize, map.tileSize, map.tileSize);
+                context.fillStyle = '#730';
+            } else {
+                context.fillStyle = '#69d';
             }
+            context.fillRect(col * map.tileSize, row * map.tileSize, map.tileSize, map.tileSize);
         }
     }
 

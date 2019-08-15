@@ -87,10 +87,10 @@ const render = () => {
 let playerSprite = null;
 
 const playerStep = () => {
-    const MAX_HORIZONTAL_SPEED = 3 * METERS_PER_SECOND;
-    const HORIZONTAL_ACCELERATION = 6 * METERS_PER_SECOND_PER_SECOND;
-    const JUMP_POWER = 8 * METERS_PER_SECOND;
-    const GRAVITY = 7 * METERS_PER_SECOND_PER_SECOND;
+    const MAX_HORIZONTAL_SPEED = 6 * METERS_PER_SECOND;
+    const HORIZONTAL_ACCELERATION = 12 * METERS_PER_SECOND_PER_SECOND;
+    const JUMP_POWER = 9 * METERS_PER_SECOND;
+    const GRAVITY = 10 * METERS_PER_SECOND_PER_SECOND;
     const TERMINAL_VELOCITY = 10 * METERS_PER_SECOND;
 
     const current = states.current.player;
