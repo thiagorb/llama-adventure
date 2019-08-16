@@ -60,7 +60,13 @@ const render = () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     context.save();
+    context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
     context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
+    context.translate(
+        -states.current.player.position.x - PLAYER_WIDTH / 2,
+        -states.current.player.position.y - PLAYER_HEIGHT / 2
+    );
+
     context.drawImage(getRendered(map), 0, 0);
 
     context.save();
