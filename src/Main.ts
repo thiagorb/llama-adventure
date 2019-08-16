@@ -54,6 +54,8 @@ const states = {
 
 const render = () => {
     const context = canvas.getContext('2d');
+    context.imageSmoothingEnabled = false;
+
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(getRendered(map), 0, 0);
 
