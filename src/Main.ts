@@ -1,19 +1,20 @@
 import { keys } from "./keys";
-import { createMap, getRendered, collidesWithHorizontalSegment, collidesWithVerticalSegment } from './map';
-import {drawSprite, loadSprite} from "./sprites";
+import { collidesWithHorizontalSegment, collidesWithVerticalSegment, createMap, getRendered } from './map';
+import { drawSprite, loadSprite } from "./sprites";
 
 const offscreen = document.createElement('canvas');
 offscreen.width = 320;
 offscreen.height = 240;
 const canvas = document.getElementsByTagName('canvas')[0];
 
-const METERS = 12;
+const PIXELS_PER_METER = 12;
+const METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
 const STEPS_PER_SECOND = 120;
-const METERS_PER_SECOND = METERS / STEPS_PER_SECOND;
+const METERS_PER_SECOND = 1 / STEPS_PER_SECOND;
 const METERS_PER_SECOND_PER_SECOND = METERS_PER_SECOND / STEPS_PER_SECOND;
-const TILE_SIZE = 2 * METERS;
-const PLAYER_WIDTH = METERS;
-const PLAYER_HEIGHT = 1.5 * METERS;
+const TILE_SIZE = 2;
+const PLAYER_WIDTH = 1;
+const PLAYER_HEIGHT = 1.5;
 
 const map = createMap(
     [
@@ -36,8 +37,8 @@ const map = createMap(
 const makeState = () => ({
     player: {
         position: {
-            x: 100,
-            y: 100,
+            x: 5,
+            y: 4,
         },
         speed: {
             x: 0,
@@ -57,12 +58,15 @@ const render = () => {
     context.imageSmoothingEnabled = false;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
+
+    context.save();
+    context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
     context.drawImage(getRendered(map), 0, 0);
 
     context.save();
     context.translate(states.current.player.position.x, states.current.player.position.y);
     if (states.current.player.left) {
-        context.translate(playerSprite.width, 0);
+        context.translate(PLAYER_WIDTH, 0);
         context.scale(-1, 1);
     }
 
@@ -75,6 +79,8 @@ const render = () => {
         PLAYER_HEIGHT,
         stepsSinceBeginning * 4 / STEPS_PER_SECOND
     );
+    context.restore();
+
     context.restore();
 
     context.font = '20px sans-serif';
@@ -112,12 +118,12 @@ const playerStep = () => {
 
     const top = next.position.y;
     const left = next.position.x;
-    const right = left + playerSprite.width - 1;
-    const bottom = top + playerSprite.height - 1;
+    const right = left + PLAYER_WIDTH - METERS_PER_PIXEL;
+    const bottom = top + PLAYER_HEIGHT - METERS_PER_PIXEL;
     const nextTop = top + next.speed.y;
     const nextLeft = left + next.speed.x;
-    const nextRight = nextLeft + playerSprite.width;
-    const nextBottom = nextTop + playerSprite.height;
+    const nextRight = nextLeft + PLAYER_WIDTH;
+    const nextBottom = nextTop + PLAYER_HEIGHT;
 
     if (collidesWithHorizontalSegment(map, nextBottom, left, right)) {
         if (keys.ArrowUp) {
