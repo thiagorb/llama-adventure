@@ -1,10 +1,5 @@
 import { keys } from "./keys";
-import {
-    collidesWithHorizontalSegment,
-    collidesWithVerticalSegment,
-    createMap,
-    createRandom, getCellValue, getPositionValue
-} from './map';
+import * as map from './map';
 import { drawSprite, loadSprite } from "./sprites";
 import {
     METERS_PER_PIXEL,
@@ -18,27 +13,25 @@ import {
     STEPS_PER_SECOND,
     TILE_SIZE
 } from './consts';
+import { getCellValue } from "./map";
+import * as matrix from "./matrix";
 
-const renderMap = () => {
-    const mapCanvas = document.createElement('canvas');
-    mapCanvas.width = map.tileSize * map.cols * PIXELS_PER_METER;
-    mapCanvas.height = map.tileSize * map.rows * PIXELS_PER_METER;
-    const context = mapCanvas.getContext('2d');
 
-    const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
-    const randomizeColor = ({ r, g, b }, c) => ({
-        r: randomizeValue(r, c),
-        g: randomizeValue(g, c),
-        b: randomizeValue(b, c),
-    });
-    const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
-    const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
+const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
+const randomizeColor = ({ r, g, b }, c) => ({
+    r: randomizeValue(r, c),
+    g: randomizeValue(g, c),
+    b: randomizeValue(b, c),
+});
+const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
+const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 
+const complexRender = (mapCanvas, context) => {
     for (let x = 0; x < mapCanvas.width; x++) {
         let depth = 10;
         for (let y = 0; y < mapCanvas.height; y++) {
-            if (getPositionValue(map, x / PIXELS_PER_METER, y / PIXELS_PER_METER)) {
-                if (depth > 2 + Math.random() + Math.cos(x / 2)) {
+            if (map.isSolidPosition(levelMap, x / PIXELS_PER_METER, y / PIXELS_PER_METER)) {
+                if (depth > 3 + Math.random() + Math.cos(x / 2)) {
                     context.fillStyle = formatColor(
                         randomizeColor(brightness({ r: 120, g: 69, b: 20 }, 1 - 0.05 * Math.cos(x / 10) * Math.sin(x / 20 + y / 10)), 10)
                     );
@@ -50,11 +43,40 @@ const renderMap = () => {
                 depth = 0;
                 context.fillStyle = '#69d';
             }
-            context.fillRect(x, y, 2, 2);
+            context.fillRect(x, y, 1, 1);
         }
     }
+};
 
-    map.rendered = mapCanvas;
+const simpleRender = (mapCanvas, context) => {
+    context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
+    for (let col = 0; col < map.getCols(levelMap); col++) {
+        let depth = 2;
+        for (let row = 0; row < map.getRows(levelMap); row++) {
+            if (map.isSolidCell(levelMap, row, col)) {
+                if (depth > 0) {
+                    context.fillStyle = formatColor(
+                        randomizeColor({ r: 120, g: 69, b: 20 }, 10)
+                    );
+                } else {
+                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
+                }
+                depth++;
+            } else {
+                depth = 0;
+                context.fillStyle = '#69d';
+            }
+            context.fillRect(col, row, 1, 1);
+        }
+    }
+};
+
+const renderMap = () => {
+    const mapCanvas = document.createElement('canvas');
+    mapCanvas.width = map.getTileSize(levelMap) * map.getCols(levelMap) * PIXELS_PER_METER;
+    mapCanvas.height = map.getTileSize(levelMap) * map.getRows(levelMap) * PIXELS_PER_METER;
+    const context = mapCanvas.getContext('2d');
+    simpleRender(mapCanvas, context);
     return mapCanvas;
 };
 
@@ -64,14 +86,14 @@ offscreen.height = 240;
 const canvas = document.getElementsByTagName('canvas')[0];
 
 
-let map;
+let levelMap: map.Map;
 let renderedMap;
 
 const makeState = () => ({
     player: {
         position: {
-            x: 10,
-            y: 10,
+            x: 0,
+            y: 0,
         },
         speed: {
             x: 0,
@@ -80,11 +102,37 @@ const makeState = () => ({
         left: true,
         jumping: 0,
     },
+    goal: {
+        position: {
+            x: 0,
+            y: 0,
+        },
+    }
 });
 
 const states = {
     current: makeState(),
-    next: makeState(),
+    next: null,
+};
+
+const renderPlayer = (context: CanvasRenderingContext2D) => {
+    context.save();
+    context.translate(states.current.player.position.x, states.current.player.position.y);
+    if (states.current.player.left) {
+        context.translate(PLAYER_WIDTH, 0);
+        context.scale(-1, 1);
+    }
+
+    drawSprite(
+        context,
+        playerSprite,
+        0,
+        0,
+        PLAYER_WIDTH,
+        PLAYER_HEIGHT,
+        stepsSinceBeginning * 4 / STEPS_PER_SECOND
+    );
+    context.restore();
 };
 
 const render = () => {
@@ -106,30 +154,21 @@ const render = () => {
     context.drawImage(renderedMap, 0, 0);
     context.restore();
 
-    context.save();
-    context.translate(states.current.player.position.x, states.current.player.position.y);
-    if (states.current.player.left) {
-        context.translate(PLAYER_WIDTH, 0);
-        context.scale(-1, 1);
-    }
+    renderPlayer(context);
 
-    drawSprite(
-        context,
-        playerSprite,
-        0,
-        0,
-        PLAYER_WIDTH,
-        PLAYER_HEIGHT,
-        stepsSinceBeginning * 4 / STEPS_PER_SECOND
-    );
-    context.restore();
+    context.fillStyle = 'yellow';
+    context.fillRect(states.current.goal.position.x, states.current.goal.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
 
     context.restore();
 
-    context.font = '20px sans-serif';
+    context.font = '10px sans-serif';
     context.fillStyle = 'blue';
-    context.fillText(sps.toString(), 20, 80);
-    context.fillText(fps.toString(), 20, 100);
+    context.fillText(sps.toString(), 5, 10);
+    context.fillText(fps.toString(), 5, 20);
+    context.fillText(states.current.player.position.x.toFixed(), 5, 30);
+    context.fillText(states.current.player.position.y.toFixed(), 30, 30);
+    context.fillText(states.current.goal.position.x.toFixed(), 5, 40);
+    context.fillText(states.current.goal.position.y.toFixed(), 30, 40);
 };
 
 let playerSprite = null;
@@ -180,9 +219,9 @@ const playerStep = () => {
         next.jumping--;
     }
 
-    if (collidesWithHorizontalSegment(map, nextBottom, left, right)) {
+    if (map.collidesWithHorizontalSegment(levelMap, nextBottom, left, right)) {
         if (keys.ArrowUp) {
-            next.jumping = STEPS_PER_SECOND / 2;
+            next.jumping = STEPS_PER_SECOND * 0.7;
             next.speed.y = -JUMP_POWER;
         } else {
             next.speed.y = 0;
@@ -195,16 +234,16 @@ const playerStep = () => {
         }
     }
 
-    if (next.speed.y < 0 && collidesWithHorizontalSegment(map, nextTop, left, right)) {
+    if (next.speed.y < 0 && map.collidesWithHorizontalSegment(levelMap, nextTop, left, right)) {
         next.speed.y = 0;
         next.jumping = 0;
     }
 
-    if (next.speed.x > 0 && collidesWithVerticalSegment(map, nextRight, top, bottom)) {
+    if (next.speed.x > 0 && map.collidesWithVerticalSegment(levelMap, nextRight, top, bottom)) {
         next.speed.x = 0;
     }
 
-    if (next.speed.x < 0 && collidesWithVerticalSegment(map, nextLeft, top, bottom)) {
+    if (next.speed.x < 0 && map.collidesWithVerticalSegment(levelMap, nextLeft, top, bottom)) {
         next.speed.x = 0;
     }
 };
@@ -212,10 +251,10 @@ const playerStep = () => {
 const step = (steps: number) => {
     for (let i = 0; i < steps; i++) {
         stepCount++;
+        playerStep();
         let temp = states.next;
         states.current = states.next;
         states.next = temp;
-        playerStep();
     }
 };
 
@@ -241,9 +280,46 @@ setInterval(() => {
     frameCount = 0;
 }, 1000);
 
+const findPosition = (regions: map.RegionsMap) => {
+    for (let i = 0; i < 100; i++) {
+        const row = Math.floor(Math.random() * map.getRows(levelMap));
+        const col = Math.floor(Math.random() * map.getCols(levelMap));
+        if (matrix.get(regions.map, row, col) !== regions.biggest) {
+            continue;
+        }
+        const x = col * TILE_SIZE;
+        const y = row * TILE_SIZE;
+
+        if (map.collidesWithHorizontalSegment(levelMap, y, x, x + PLAYER_WIDTH)) {
+            continue;
+        }
+
+        if (map.collidesWithVerticalSegment(levelMap, x, y, y + PLAYER_HEIGHT)) {
+            continue;
+        }
+
+        return { x, y };
+    }
+    throw new Error('Unable to find position');
+};
+
+const deepCopy = obj => {
+    if (obj.constructor !== Object) {
+        return obj;
+    }
+
+    const copy = {};
+    Object.keys(obj).forEach(k => copy[k] = deepCopy(obj[k]));
+    return copy;
+};
+
 (async () => {
     playerSprite = await loadSprite('llama');
-    map = createMap(createRandom(), TILE_SIZE);
+    levelMap = map.create(map.randomTiles(), TILE_SIZE);
     renderedMap = renderMap();
+    const regions = map.calculateRegions(levelMap);
+    states.current.player.position = findPosition(regions);
+    states.current.goal.position = findPosition(regions);
+    states.next = deepCopy(states.current);
     loop(0);
 })();

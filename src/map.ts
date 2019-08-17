@@ -1,55 +1,47 @@
-interface Map {
-    tiles: Int8Array;
-    rows: number;
-    cols: number;
+import * as matrix from './matrix';
+
+export interface Map {
+    tiles: matrix.Matrix;
     tileSize: number;
 }
 
-export const createMap = (values: number[][], tileSize): Map => {
-    const rows = values.length;
-    const cols = values[0].length;
-    const tiles = new Int8Array(cols * rows);
+export interface RegionsMap {
+    map: matrix.Matrix;
+    biggest: number;
+}
 
-    values.forEach(
-        (row, rowIndex) => row.forEach(
-            (cell, cellIndex) => tiles[rowIndex * cols + cellIndex] = cell
-        )
-    );
-
-    return {
-        tiles,
-        rows,
-        cols,
-        tileSize
-    };
+export const create = (tiles: matrix.Matrix, tileSize): Map => {
+    return { tiles, tileSize };
 };
 
+export const getCols = (map: Map) => matrix.getCols(map.tiles);
+export const getRows = (map: Map) => matrix.getRows(map.tiles);
 export const getCol = (map: Map, x: number) => Math.floor(x / map.tileSize);
 export const getRow = (map: Map, y: number) => Math.floor(y / map.tileSize);
 
-export const getCellValue = (map: Map, col: number, row: number) => {
-    return map.tiles[row * map.cols + col];
-};
+export const getCellValue = (map: Map, row: number, col: number) =>
+    matrix.get(map.tiles, row, col);
 
-export const getPositionValue = (map: Map, x: number, y: number) => {
-    return getCellValue(map, getCol(map, x), getRow(map, y));
-};
+export const getPositionValue = (map: Map, x: number, y: number) =>
+    getCellValue(map, getRow(map, y), getCol(map, x));
 
 export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2: number) => {
     const col = getCol(map, x);
     for (let row = getRow(map, y1); row <= getRow(map, y2); row++) {
-        if (getCellValue(map, col, row)) {
+        if (isSolidCell(map, row, col)) {
             return true;
         }
     }
 
     return false;
 };
+
+export const getTileSize = (map: Map) => map.tileSize;
 
 export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x2: number) => {
     const row = getRow(map, y);
     for (let col = getCol(map, x1); col <= getCol(map, x2); col++) {
-        if (getCellValue(map, col, row)) {
+        if (isSolidCell(map, row, col)) {
             return true;
         }
     }
@@ -57,60 +49,89 @@ export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x
     return false;
 };
 
-const initializeArray = <T>(length: number, init: (i: number) => T) => {
-    const array = new Array(length);
-    for (let i = 0; i < length; i++) {
-        array[i] = init(i);
-    }
-    return array;
-};
-
-const initializeMatrix = (rows, cols, init) => initializeArray(
-    rows,
-    row => initializeArray(cols, col => init(row, col))
-);
-
-const iterateMatrix = (matrix, callback) => matrix.forEach(
-    (row, rowIndex) => row.forEach((value, colIndex) => callback(rowIndex, colIndex, value))
-);
-
-export const createRandom = () => {
+export const randomTiles = () => {
     const initialChance = 0.3;
     const birthLimit = 6;
-    const deathLimit = 4;
-    const numberOfSteps = 6;
+    const deathLimit = 5;
+    const numberOfSteps = 5;
 
-    const rows = 50;
-    const cols = 50;
+    const rows = 100;
+    const cols = 300;
 
-    let map = initializeMatrix(rows, cols, () => Math.random() < initialChance ? 1 : 0);
-    let next = initializeMatrix(rows, cols, () => 0);
+    let tiles = matrix.create(rows, cols, () => Math.random() < initialChance ? 1 : 0);
+    let next = matrix.create(rows, cols, () => 0);
 
     for (let step = 0; step < numberOfSteps; step++) {
-        iterateMatrix(next, (row, col) => {
+        matrix.iterate(next, (row, col) => {
             let neighborsCount = 0;
             for (let i of [-1, 0, 1]) {
-                for (let j of i ? [-2, -1, 0, 1, 2] : [-3, -1, 1, 3]) {
+                for (let j of i ? [-3, -2, -1, 0, 1, 2] : [-3, -1, 1, 3]) {
                     const neighborRow = row + i;
                     const neighborCol = col + j;
 
-                    if (neighborRow < 0 || neighborRow >= rows || neighborCol < 0 || neighborCol >= cols || map[neighborRow][neighborCol]) {
+                    if (!matrix.has(tiles, neighborRow, neighborCol) || matrix.get(tiles, neighborRow, neighborCol)) {
                         neighborsCount++;
                     }
                 }
             }
 
-            if (map[row][col]) {
-                next[row][col] = neighborsCount >= deathLimit;
-            } else {
-                next[row][col] = neighborsCount > birthLimit;
-            }
+            const nextValue = matrix.get(tiles, row, col)
+                ? neighborsCount >= deathLimit
+                : neighborsCount > birthLimit;
+
+            matrix.set(next, row, col, nextValue ? 1 : 0);
         });
 
-        let temp = map;
-        map = next;
+        let temp = tiles;
+        tiles = next;
         next = temp;
     }
 
-    return map;
+    return tiles;
+};
+
+const isSolidValue = value => value > 0;
+export const isSolidPosition = (map: Map, x, y) => isSolidValue(getPositionValue(map, x, y));
+export const isSolidCell = (map: Map, row, col) => isSolidValue(getCellValue(map, row, col));
+
+export const calculateRegions = (map: Map): RegionsMap => {
+    let regions = 0;
+    const regionsAreas = {};
+    const regionsMap = matrix.create(
+        getRows(map),
+        getCols(map),
+        (row, col) => isSolidCell(map, row, col) ? -1 : 0
+    );
+
+    matrix.iterate(regionsMap, (row, col) => {
+        if (matrix.get(regionsMap, row, col)) {
+            return;
+        }
+
+        regions++;
+        const regionId = regions;
+        let regionArea = 1;
+        const boundary = [{row, col}];
+        matrix.set(regionsMap, row, col, regionId);
+        while (boundary.length > 0) {
+            const current = boundary.pop();
+            for (let i of [-1, 0, 1]) {
+                for (let j of i ? [0] : [-1, 1]) {
+                    const neighborRow = current.row + i;
+                    const neighborCol = current.col + j;
+                    if (matrix.has(regionsMap, neighborRow, neighborCol) && !matrix.get(regionsMap, neighborRow, neighborCol)) {
+                        boundary.push({ row: neighborRow, col: neighborCol });
+                        matrix.set(regionsMap, neighborRow, neighborCol, regionId);
+                        regionArea++;
+                    }
+                }
+            }
+        }
+        regionsAreas[regionId] = regionArea;
+    });
+
+    return {
+        map: regionsMap,
+        biggest: parseInt(Object.keys(regionsAreas).sort((a, b) => regionsAreas[b] - regionsAreas[a])[0])
+    };
 };
