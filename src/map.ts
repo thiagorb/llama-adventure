@@ -89,10 +89,6 @@ export const createRandom = () => {
     for (let step = 0; step < numberOfSteps; step++) {
         iterateMatrix(next, (row, col) => {
             let neighborsCount = 0;
-            //   aaa
-            // aaa aaa
-            //   aaa
-
             for (let i of [-1, 0, 1]) {
                 for (let j of i ? [-2, -1, 0, 1, 2] : [-3, -1, 1, 3]) {
                     const neighborRow = row + i;

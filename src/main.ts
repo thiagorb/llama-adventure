@@ -25,12 +25,13 @@ const renderMap = () => {
     mapCanvas.height = map.tileSize * map.rows * PIXELS_PER_METER;
     const context = mapCanvas.getContext('2d');
 
-    const randomizeValue = e => Math.max(0, Math.min(255, e + Math.random() * 15));
-    const randomizeColor = ({ r, g, b }) => ({
-        r: randomizeValue(r),
-        g: randomizeValue(g),
-        b: randomizeValue(b),
+    const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
+    const randomizeColor = ({ r, g, b }, c) => ({
+        r: randomizeValue(r, c),
+        g: randomizeValue(g, c),
+        b: randomizeValue(b, c),
     });
+    const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
     const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 
     for (let x = 0; x < mapCanvas.width; x++) {
@@ -38,9 +39,11 @@ const renderMap = () => {
         for (let y = 0; y < mapCanvas.height; y++) {
             if (getPositionValue(map, x / PIXELS_PER_METER, y / PIXELS_PER_METER)) {
                 if (depth > 2 + Math.random() + Math.cos(x / 2)) {
-                    context.fillStyle = formatColor(randomizeColor({ r: 120, g: 69, b: 20 }));
+                    context.fillStyle = formatColor(
+                        randomizeColor(brightness({ r: 120, g: 69, b: 20 }, 1 - 0.05 * Math.cos(x / 10) * Math.sin(x / 20 + y / 10)), 10)
+                    );
                 } else {
-                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }));
+                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
                 }
                 depth++;
             } else {
