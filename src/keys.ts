@@ -48,12 +48,14 @@ if (isTouchDevice()) {
     document.body.classList.add('touch');
 
     document.addEventListener('touchstart', event => {
+        event.preventDefault();
         if ((event.target as HTMLDivElement).getAttribute('data-touch-key') in keys) {
             state[(event.target as HTMLDivElement).getAttribute('data-touch-key')] = true;
         }
     });
 
     document.addEventListener('touchend', event => {
+        event.preventDefault();
         if ((event.target as HTMLDivElement).getAttribute('data-touch-key') in keys) {
             state[(event.target as HTMLDivElement).getAttribute('data-touch-key')] = false;
         }
