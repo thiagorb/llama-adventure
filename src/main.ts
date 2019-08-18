@@ -13,69 +13,6 @@ import * as physics from "./physics";
 import * as player from "./player";
 import * as state from "./state";
 
-const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
-const randomizeColor = ({ r, g, b }, c) => ({
-    r: randomizeValue(r, c),
-    g: randomizeValue(g, c),
-    b: randomizeValue(b, c),
-});
-const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
-const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
-
-const complexRender = (mapCanvas, context) => {
-    for (let x = 0; x < mapCanvas.width; x++) {
-        let depth = 10;
-        for (let y = 0; y < mapCanvas.height; y++) {
-            if (map.isSolidPosition(levelMap, x / PIXELS_PER_METER, y / PIXELS_PER_METER)) {
-                if (depth > 3 + Math.random() + Math.cos(x / 2)) {
-                    context.fillStyle = formatColor(
-                        randomizeColor(brightness({ r: 120, g: 69, b: 20 }, 1 - 0.05 * Math.cos(x / 10) * Math.sin(x / 20 + y / 10)), 10)
-                    );
-                } else {
-                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
-                }
-                depth++;
-            } else {
-                depth = 0;
-                context.fillStyle = '#69d';
-            }
-            context.fillRect(x, y, 1, 1);
-        }
-    }
-};
-
-const simpleRender = (mapCanvas, context) => {
-    context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
-    for (let col = 0; col < map.getCols(levelMap); col++) {
-        let depth = 2;
-        for (let row = 0; row < map.getRows(levelMap); row++) {
-            if (map.isSolidCell(levelMap, row, col)) {
-                if (depth > 0) {
-                    context.fillStyle = formatColor(
-                        randomizeColor({ r: 120, g: 69, b: 20 }, 10)
-                    );
-                } else {
-                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
-                }
-                depth++;
-            } else {
-                depth = 0;
-                context.fillStyle = '#69d';
-            }
-            context.fillRect(col, row, 1, 1);
-        }
-    }
-};
-
-const renderMap = () => {
-    const mapCanvas = document.createElement('canvas');
-    mapCanvas.width = map.getTileSize(levelMap) * map.getCols(levelMap) * PIXELS_PER_METER;
-    mapCanvas.height = map.getTileSize(levelMap) * map.getRows(levelMap) * PIXELS_PER_METER;
-    const context = mapCanvas.getContext('2d');
-    simpleRender(mapCanvas, context);
-    return mapCanvas;
-};
-
 const canvas = document.getElementsByTagName('canvas')[0];
 
 let levelMap: map.Map;
@@ -190,7 +127,7 @@ const deepCopy = obj => {
 (async () => {
     await player.init();
     levelMap = map.create(map.randomTiles(), TILE_SIZE);
-    renderedMap = renderMap();
+    renderedMap = map.render(levelMap);
     const regions = map.calculateRegions(levelMap);
     states.current.player.position = findPosition(regions);
     states.current.goal.position = findPosition(regions);

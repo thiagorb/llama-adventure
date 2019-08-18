@@ -1,4 +1,5 @@
 import * as matrix from './matrix';
+import { PIXELS_PER_METER, TILE_SIZE } from "./consts";
 
 export interface Map {
     tiles: matrix.Matrix;
@@ -134,4 +135,68 @@ export const calculateRegions = (map: Map): RegionsMap => {
         map: regionsMap,
         biggest: parseInt(Object.keys(regionsAreas).sort((a, b) => regionsAreas[b] - regionsAreas[a])[0])
     };
+};
+
+const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
+const randomizeColor = ({ r, g, b }, c) => ({
+    r: randomizeValue(r, c),
+    g: randomizeValue(g, c),
+    b: randomizeValue(b, c),
+});
+const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
+const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
+
+const complexRender = (map: Map, canvas: HTMLCanvasElement) => {
+    const context = canvas.getContext('2d');
+    for (let x = 0; x < canvas.width; x++) {
+        let depth = 10;
+        for (let y = 0; y < canvas.height; y++) {
+            if (isSolidPosition(map, x / PIXELS_PER_METER, y / PIXELS_PER_METER)) {
+                if (depth > 3 + Math.random() + Math.cos(x / 2)) {
+                    context.fillStyle = formatColor(
+                        randomizeColor(brightness({ r: 120, g: 69, b: 20 }, 1 - 0.05 * Math.cos(x / 10) * Math.sin(x / 20 + y / 10)), 10)
+                    );
+                } else {
+                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
+                }
+                depth++;
+            } else {
+                depth = 0;
+                context.fillStyle = '#69d';
+            }
+            context.fillRect(x, y, 1, 1);
+        }
+    }
+};
+
+const simpleRender = (map: Map, canvas: HTMLCanvasElement) => {
+    const context = canvas.getContext('2d');
+    context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
+    for (let col = 0; col < getCols(map); col++) {
+        let depth = 2;
+        for (let row = 0; row < getRows(map); row++) {
+            if (isSolidCell(map, row, col)) {
+                if (depth > 0) {
+                    context.fillStyle = formatColor(
+                        randomizeColor({ r: 120, g: 69, b: 20 }, 10)
+                    );
+                } else {
+                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
+                }
+                depth++;
+            } else {
+                depth = 0;
+                context.fillStyle = '#69d';
+            }
+            context.fillRect(col, row, 1, 1);
+        }
+    }
+};
+
+export const render = (map: Map) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = getTileSize(map) * getCols(map) * PIXELS_PER_METER;
+    canvas.height = getTileSize(map) * getRows(map) * PIXELS_PER_METER;
+    simpleRender(map, canvas);
+    return canvas;
 };
