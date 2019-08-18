@@ -1,10 +1,6 @@
-import { keys } from "./keys";
 import * as map from './map';
 import { drawSprite, loadSprite } from "./sprites";
 import {
-    METERS_PER_PIXEL,
-    METERS_PER_SECOND,
-    METERS_PER_SECOND_PER_SECOND,
     PIXELS_PER_METER,
     PLAYER_HEIGHT,
     PLAYER_WIDTH,
@@ -13,9 +9,8 @@ import {
     STEPS_PER_SECOND,
     TILE_SIZE
 } from './consts';
-import { getCellValue } from "./map";
 import * as matrix from "./matrix";
-
+import * as physics from "./physics";
 
 const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
 const randomizeColor = ({ r, g, b }, c) => ({
@@ -101,6 +96,7 @@ const makeState = () => ({
         },
         left: true,
         jumping: 0,
+        touchingFloor: true,
     },
     goal: {
         position: {
@@ -173,85 +169,10 @@ const render = () => {
 
 let playerSprite = null;
 
-const playerStep = () => {
-    const MAX_HORIZONTAL_SPEED = 6 * METERS_PER_SECOND;
-    const HORIZONTAL_ACCELERATION = 20 * METERS_PER_SECOND_PER_SECOND;
-    const JUMP_POWER = 7 * METERS_PER_SECOND;
-    const GRAVITY = 20 * METERS_PER_SECOND_PER_SECOND;
-    const TERMINAL_VELOCITY = 8 * METERS_PER_SECOND;
-
-    const current = states.current.player;
-    const next = states.next.player;
-
-    next.position.x = current.position.x + current.speed.x;
-    next.position.y = current.position.y + current.speed.y;
-
-    if (keys.ArrowLeft) {
-        next.speed.x = Math.max(current.speed.x - HORIZONTAL_ACCELERATION, -MAX_HORIZONTAL_SPEED);
-        next.left = true;
-    } else if (keys.ArrowRight) {
-        next.speed.x = Math.min(current.speed.x + HORIZONTAL_ACCELERATION, MAX_HORIZONTAL_SPEED);
-        next.left = false;
-    } else if (current.speed.x < 0) {
-        next.speed.x = Math.min(0, current.speed.x + HORIZONTAL_ACCELERATION);
-    } else {
-        next.speed.x = Math.max(0, current.speed.x - HORIZONTAL_ACCELERATION);
-    }
-
-    const top = next.position.y;
-    const left = next.position.x;
-    const right = left + PLAYER_WIDTH - METERS_PER_PIXEL;
-    const bottom = top + PLAYER_HEIGHT - METERS_PER_PIXEL;
-    const nextTop = top + next.speed.y;
-    const nextLeft = left + next.speed.x;
-    const nextRight = nextLeft + PLAYER_WIDTH;
-    const nextBottom = nextTop + PLAYER_HEIGHT;
-
-    if (!keys.ArrowUp) {
-        next.jumping = 0;
-    } else {
-        if (next.jumping > 0.2 * STEPS_PER_SECOND) {
-            next.speed.y = -JUMP_POWER;
-        }
-    }
-
-    if (next.jumping) {
-        next.jumping--;
-    }
-
-    if (map.collidesWithHorizontalSegment(levelMap, nextBottom, left, right)) {
-        if (keys.ArrowUp) {
-            next.jumping = STEPS_PER_SECOND * 0.7;
-            next.speed.y = -JUMP_POWER;
-        } else {
-            next.speed.y = 0;
-        }
-    } else {
-        const longJump = STEPS_PER_SECOND * next.jumping;
-        next.speed.y += GRAVITY / (Math.max(1, longJump * longJump * longJump));
-        if (next.speed.y > TERMINAL_VELOCITY) {
-            next.speed.y = TERMINAL_VELOCITY;
-        }
-    }
-
-    if (next.speed.y < 0 && map.collidesWithHorizontalSegment(levelMap, nextTop, left, right)) {
-        next.speed.y = 0;
-        next.jumping = 0;
-    }
-
-    if (next.speed.x > 0 && map.collidesWithVerticalSegment(levelMap, nextRight, top, bottom)) {
-        next.speed.x = 0;
-    }
-
-    if (next.speed.x < 0 && map.collidesWithVerticalSegment(levelMap, nextLeft, top, bottom)) {
-        next.speed.x = 0;
-    }
-};
-
 const step = (steps: number) => {
     for (let i = 0; i < steps; i++) {
         stepCount++;
-        playerStep();
+        physics.step(levelMap, states);
         let temp = states.next;
         states.current = states.next;
         states.next = temp;
