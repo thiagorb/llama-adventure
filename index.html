@@ -27,6 +27,7 @@
             }
 
             [data-touch-key] {
+                user-select: none;
                 display: none;
                 position: absolute;
                 width: 80px;
@@ -50,6 +51,10 @@
 
             .touch [data-touch-key] {
                 display: block;
+            }
+
+            .touch [data-touch-key]:active {
+                background: rgba(255, 255, 255, 0.2);
             }
         </style>
     </head>
