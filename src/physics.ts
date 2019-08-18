@@ -1,6 +1,6 @@
 import * as player from './player';
-import { playerMapCollision } from "./collision";
-import { Vector2D } from "./state";
+import { playerMapCollision } from './collision';
+import { Vector2D } from './state';
 
 type Accessor<T> = (state) => T;
 

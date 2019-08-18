@@ -2,16 +2,10 @@ import {
     METERS_PER_SECOND,
     METERS_PER_SECOND_PER_SECOND, PLAYER_HEIGHT, PLAYER_WIDTH,
     STEPS_PER_SECOND
-} from "./consts";
-import { keys } from "./keys";
-import * as sprites from "./sprites";
-import * as state from "./state";
-
-let sprite: sprites.Sprite = null;
-
-export const init = async () => {
-    sprite = await sprites.load('llama');
-};
+} from './consts';
+import { keys } from './keys';
+import * as sprites from './sprites';
+import * as state from './state';
 
 const calculateJumping = (player: state.Player): number => {
     if (player.touchingCeiling) {
@@ -69,7 +63,7 @@ export const update = (states: state.States) => {
 
     next.jumping = calculateJumping(current);
 
-    next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames(sprite);
+    next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames(sprites.get('llama'));
 };
 
 export const render = (context: CanvasRenderingContext2D, state: state.State) => {
@@ -80,6 +74,6 @@ export const render = (context: CanvasRenderingContext2D, state: state.State) =>
         context.scale(-1, 1);
     }
 
-    sprites.draw(context, sprite, 0, 0, PLAYER_WIDTH, PLAYER_HEIGHT, state.player.frame);
+    sprites.draw(context, sprites.get('llama'), 0, 0, PLAYER_WIDTH, PLAYER_HEIGHT, state.player.frame);
     context.restore();
 };

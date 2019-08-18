@@ -1,5 +1,5 @@
-import { METERS_PER_PIXEL, PLAYER_HEIGHT, PLAYER_WIDTH } from "./consts";
-import * as map from "./map";
+import { METERS_PER_PIXEL, PLAYER_HEIGHT, PLAYER_WIDTH } from './consts';
+import * as map from './map';
 
 export const playerMapCollision = (levelMap, player) => {
     const top = player.position.y;

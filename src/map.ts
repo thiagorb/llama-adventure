@@ -1,5 +1,5 @@
 import * as matrix from './matrix';
-import { PIXELS_PER_METER, TILE_SIZE } from "./consts";
+import { PIXELS_PER_METER, TILE_SIZE } from './consts';
 
 export interface Map {
     tiles: matrix.Matrix;

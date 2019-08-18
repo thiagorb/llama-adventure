@@ -36,10 +36,10 @@ export const create = (): State => ({
             x: 0,
             y: 0,
         },
-        left: true,
+        left: false,
         jumping: 0,
-        touchingFloor: true,
-        touchingCeiling: true,
+        touchingFloor: false,
+        touchingCeiling: false,
         frame: 0,
     },
     goal: {
