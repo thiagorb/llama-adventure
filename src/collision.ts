@@ -14,7 +14,7 @@ export const playerMapCollision = (levelMap, player) => {
     player.touchingFloor = map.collidesWithHorizontalSegment(levelMap, nextBottom, left, right);
     player.touchingCeiling = map.collidesWithHorizontalSegment(levelMap, nextTop, left, right);
 
-    if (player.touchingFloor || player.touchingCeiling) {
+    if ((player.touchingFloor && player.speed.y > 0) || (player.touchingCeiling && player.speed.y < 0)) {
         player.speed.y = 0;
     }
 
