@@ -1,10 +1,6 @@
 import * as player from './player';
 import { playerMapCollision } from "./collision";
-
-interface Vector2D {
-    x: number;
-    y: number;
-}
+import { Vector2D } from "./state";
 
 type Accessor<T> = (state) => T;
 

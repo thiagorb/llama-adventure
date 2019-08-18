@@ -48,14 +48,14 @@ if (isTouchDevice()) {
     document.body.classList.add('touch');
 
     document.addEventListener('touchstart', event => {
-        if (event.target.getAttribute('data-touch-key') in keys) {
-            state[event.target.getAttribute('data-touch-key')] = true;
+        if ((event.target as HTMLDivElement).getAttribute('data-touch-key') in keys) {
+            state[(event.target as HTMLDivElement).getAttribute('data-touch-key')] = true;
         }
     });
 
     document.addEventListener('touchend', event => {
-        if (event.target.getAttribute('data-touch-key') in keys) {
-            state[event.target.getAttribute('data-touch-key')] = false;
+        if ((event.target as HTMLDivElement).getAttribute('data-touch-key') in keys) {
+            state[(event.target as HTMLDivElement).getAttribute('data-touch-key')] = false;
         }
     });
 }

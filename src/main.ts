@@ -1,5 +1,4 @@
 import * as map from './map';
-import { drawSprite, loadSprite } from "./sprites";
 import {
     PIXELS_PER_METER,
     PLAYER_HEIGHT,
@@ -11,6 +10,8 @@ import {
 } from './consts';
 import * as matrix from "./matrix";
 import * as physics from "./physics";
+import * as player from "./player";
+import * as state from "./state";
 
 const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
 const randomizeColor = ({ r, g, b }, c) => ({
@@ -78,53 +79,11 @@ const renderMap = () => {
 const canvas = document.getElementsByTagName('canvas')[0];
 
 let levelMap: map.Map;
-let renderedMap;
+let renderedMap: CanvasImageSource;
 
-const makeState = () => ({
-    player: {
-        position: {
-            x: 0,
-            y: 0,
-        },
-        speed: {
-            x: 0,
-            y: 0,
-        },
-        left: true,
-        jumping: 0,
-        touchingFloor: true,
-    },
-    goal: {
-        position: {
-            x: 0,
-            y: 0,
-        },
-    }
-});
-
-const states = {
-    current: makeState(),
+const states: state.States = {
+    current: state.create(),
     next: null,
-};
-
-const renderPlayer = (context: CanvasRenderingContext2D) => {
-    context.save();
-    context.translate(states.current.player.position.x, states.current.player.position.y);
-    if (states.current.player.left) {
-        context.translate(PLAYER_WIDTH, 0);
-        context.scale(-1, 1);
-    }
-
-    drawSprite(
-        context,
-        playerSprite,
-        0,
-        0,
-        PLAYER_WIDTH,
-        PLAYER_HEIGHT,
-        stepsSinceBeginning * 4 / STEPS_PER_SECOND
-    );
-    context.restore();
 };
 
 const render = () => {
@@ -146,7 +105,7 @@ const render = () => {
     context.drawImage(renderedMap, 0, 0);
     context.restore();
 
-    renderPlayer(context);
+    player.render(context, states.current);
 
     context.fillStyle = 'yellow';
     context.fillRect(states.current.goal.position.x, states.current.goal.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
@@ -162,8 +121,6 @@ const render = () => {
     context.fillText(states.current.goal.position.x.toFixed(), 5, 40);
     context.fillText(states.current.goal.position.y.toFixed(), 30, 40);
 };
-
-let playerSprite = null;
 
 const step = (steps: number) => {
     for (let i = 0; i < steps; i++) {
@@ -231,7 +188,7 @@ const deepCopy = obj => {
 };
 
 (async () => {
-    playerSprite = await loadSprite('llama');
+    await player.init();
     levelMap = map.create(map.randomTiles(), TILE_SIZE);
     renderedMap = renderMap();
     const regions = map.calculateRegions(levelMap);

@@ -7,21 +7,21 @@ const sprites = {
     }
 };
 
-export const loadSprite = (code: keyof typeof sprites): Promise<Sprite> => new Promise(resolve => {
+export const load = (code: keyof typeof sprites): Promise<Sprite> => new Promise(resolve => {
     const sprite = sprites[code];
     const image = new Image();
     image.onload = () => resolve({ ...sprite, image });
     image.src = sprite.url;
 });
 
-interface Sprite {
+export interface Sprite {
     image: HTMLImageElement;
     width: number;
     height: number;
     frames: number;
 }
 
-export const drawSprite = (context: CanvasRenderingContext2D, sprite: Sprite, x: number, y: number, width = sprite.width, height = sprite.height, frame = 0) => {
+export const draw = (context: CanvasRenderingContext2D, sprite: Sprite, x: number, y: number, width = sprite.width, height = sprite.height, frame = 0) => {
     context.drawImage(
         sprite.image,
         0,
@@ -34,3 +34,5 @@ export const drawSprite = (context: CanvasRenderingContext2D, sprite: Sprite, x:
         height
     );
 };
+
+export const getFrames = (sprite: Sprite) => sprite.frames;
