@@ -35,4 +35,29 @@ document.addEventListener('keyup', event => {
     }
 });
 
+const isTouchDevice = () => {
+    try {
+        document.createEvent('TouchEvent');
+        return true;
+    } catch (e) {
+        return false;
+    }
+};
+
+if (isTouchDevice()) {
+    document.body.classList.add('touch');
+
+    document.addEventListener('touchstart', event => {
+        if (event.target.getAttribute('data-touch-key') in keys) {
+            state[event.target.getAttribute('data-touch-key')] = true;
+        }
+    });
+
+    document.addEventListener('touchend', event => {
+        if (event.target.getAttribute('data-touch-key') in keys) {
+            state[event.target.getAttribute('data-touch-key')] = false;
+        }
+    });
+}
+
 export const keys: Keys = state;
