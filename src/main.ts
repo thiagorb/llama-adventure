@@ -75,11 +75,7 @@ const renderMap = () => {
     return mapCanvas;
 };
 
-const offscreen = document.createElement('canvas');
-offscreen.width = 320;
-offscreen.height = 240;
 const canvas = document.getElementsByTagName('canvas')[0];
-
 
 let levelMap: map.Map;
 let renderedMap;
