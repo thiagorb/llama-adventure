@@ -49,15 +49,36 @@ const render = (game: Game) => {
     context.fillText(game.states.current.player.position.y.toFixed(), 30, 30);
     context.fillText(game.states.current.goal.position.x.toFixed(), 5, 40);
     context.fillText(game.states.current.goal.position.y.toFixed(), 30, 40);
+
+    if (game.finished) {
+        game.fadingOut = Math.min(300, game.fadingOut + 1);
+        context.fillStyle = `rgba(0, 0, 0, ${game.fadingOut / 300})`;
+        context.fillRect(0, 0, game.canvas.width, game.canvas.height);
+    }
 };
+
+const distance2 = (p1: state.Vector2D, p2: state.Vector2D) => {
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+
+    return dx * dx + dy * dy;
+};
+
+const reachedGoal = (state: state.State) =>
+    distance2(state.player.position, state.goal.position) < PLAYER_HEIGHT * PLAYER_HEIGHT;
 
 const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
         game.stepCount++;
-        physics.step(game.levelMap, game.states);
+        if (!game.finished) {
+            physics.step(game.levelMap, game.states);
+        }
         let temp = game.states.next;
         game.states.current = game.states.next;
         game.states.next = temp;
+        if (reachedGoal(game.states.current)) {
+            game.finished = true;
+        }
     }
 };
 
@@ -118,6 +139,8 @@ interface Game {
     levelMap: map.Map;
     renderedMap: CanvasImageSource;
     secondInterval: number;
+    finished: boolean;
+    fadingOut: number;
 }
 
 export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
@@ -144,6 +167,8 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
         levelMap,
         renderedMap,
         secondInterval: null,
+        finished: false,
+        fadingOut: 0,
     }
 };
 
