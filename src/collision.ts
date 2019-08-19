@@ -1,7 +1,8 @@
 import { METERS_PER_PIXEL, PLAYER_HEIGHT, PLAYER_WIDTH } from './consts';
 import * as map from './map';
+import * as state from './state';
 
-export const playerMapCollision = (levelMap, player) => {
+export const playerMapCollision = (levelMap: map.Map, player: state.Player) => {
     const top = player.position.y;
     const left = player.position.x;
     const right = left + PLAYER_WIDTH - METERS_PER_PIXEL;
