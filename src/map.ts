@@ -2,16 +2,16 @@ import * as matrix from './matrix';
 import { PIXELS_PER_METER, TILE_SIZE } from './consts';
 
 export interface Map {
-    tiles: matrix.Matrix;
+    tiles: matrix.Matrix<Int8Array>;
     tileSize: number;
 }
 
 export interface RegionsMap {
-    map: matrix.Matrix;
+    map: matrix.Matrix<Int8Array>;
     biggest: number;
 }
 
-export const create = (tiles: matrix.Matrix, tileSize): Map => {
+export const create = (tiles: matrix.Matrix<Int8Array>, tileSize): Map => {
     return { tiles, tileSize };
 };
 
@@ -59,8 +59,8 @@ export const randomTiles = () => {
     const rows = 100;
     const cols = 300;
 
-    let tiles = matrix.create(rows, cols, () => Math.random() < initialChance ? 1 : 0);
-    let next = matrix.create(rows, cols, () => 0);
+    let tiles = matrix.create(Int8Array, rows, cols, () => Math.random() < initialChance ? 1 : 0);
+    let next = matrix.create(Int8Array, rows, cols, () => 0);
 
     for (let step = 0; step < numberOfSteps; step++) {
         matrix.iterate(next, (row, col) => {
@@ -99,6 +99,7 @@ export const calculateRegions = (map: Map): RegionsMap => {
     let regions = 0;
     const regionsAreas = {};
     const regionsMap = matrix.create(
+        Int8Array,
         getRows(map),
         getCols(map),
         (row, col) => isSolidCell(map, row, col) ? -1 : 0

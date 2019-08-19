@@ -1,7 +1,9 @@
-export interface Matrix {
+type TypedArray = Int8Array | Uint8Array | Int16Array | Uint16Array | Int32Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array;
+
+export interface Matrix<T extends TypedArray> {
     rows: number;
     cols: number;
-    values: Int8Array;
+    values: T;
 }
 
 const _iterate = (rows, cols, callback) => {
@@ -12,26 +14,26 @@ const _iterate = (rows, cols, callback) => {
     }
 };
 
-export const create = (rows: number, cols: number, init: (row: number, col: number) => number): Matrix => {
-    const values = new Int8Array(rows * cols);
+export const create = <T extends TypedArray>(Type: { new (length: number): T; }, rows: number, cols: number, init: (row: number, col: number) => number): Matrix<T> => {
+    const values = new Type(rows * cols);
     const matrix = { rows, cols, values };
     iterate(matrix, (row, col) => values[row * cols + col] = init(row, col));
     return matrix;
 };
 
-export const iterate = (matrix: Matrix, callback: (row: number, col: number, value: number) => void) => {
+export const iterate = <T extends TypedArray>(matrix: Matrix<T>, callback: (row: number, col: number, value: number) => void) => {
     _iterate(matrix.rows, matrix.cols, (row, col) => callback(row, col, get(matrix, row, col)));
 };
 
-export const get = (matrix: Matrix, row: number, col: number) => {
+export const get = <T extends TypedArray>(matrix: Matrix<T>, row: number, col: number) => {
     return matrix.values[row * matrix.cols + col];
 };
 
-export const set = (matrix: Matrix, row: number, col: number, value: number) => {
+export const set = <T extends TypedArray>(matrix: Matrix<T>, row: number, col: number, value: number) => {
     matrix.values[row * matrix.cols + col] = value;
 };
 
-export const has = (matrix: Matrix, row, col) => row >= 0 && col >= 0 && row < matrix.rows && col < matrix.cols;
+export const has = <T extends TypedArray>(matrix: Matrix<T>, row, col) => row >= 0 && col >= 0 && row < matrix.rows && col < matrix.cols;
 
-export const getCols = (matrix: Matrix) => matrix.cols;
-export const getRows = (matrix: Matrix) => matrix.rows;
+export const getCols = <T extends TypedArray>(matrix: Matrix<T>) => matrix.cols;
+export const getRows = <T extends TypedArray>(matrix: Matrix<T>) => matrix.rows;
