@@ -26,10 +26,20 @@ export const iterate = <T extends TypedArray>(matrix: Matrix<T>, callback: (row:
 };
 
 export const get = <T extends TypedArray>(matrix: Matrix<T>, row: number, col: number) => {
+    if (process.env.NODE_ENV === 'development') {
+        if (!has(matrix, row, col)) {
+            throw new Error(`Invalid cell {${row}, ${col }}`);
+        }
+    }
     return matrix.values[row * matrix.cols + col];
 };
 
 export const set = <T extends TypedArray>(matrix: Matrix<T>, row: number, col: number, value: number) => {
+    if (process.env.NODE_ENV === 'development') {
+        if (!has(matrix, row, col)) {
+            throw new Error(`Invalid cell {${row}, ${col }}`);
+        }
+    }
     matrix.values[row * matrix.cols + col] = value;
 };
 
