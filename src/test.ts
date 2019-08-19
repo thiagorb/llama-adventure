@@ -1,8 +1,8 @@
-import { PIXELS_PER_METER, TILE_SIZE } from './consts';
+import { PIXELS_PER_METER } from './consts';
 import * as matrix from './matrix';
 import * as map from './map';
 
-const testMap = map.create(map.randomTiles(), 1);
+const testMap = map.create(map.randomTiles());
 const canvas = document.querySelector('canvas');
 canvas.width = canvas.getClientRects()[0].width;
 canvas.height = canvas.getClientRects()[0].height;

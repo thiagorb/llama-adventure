@@ -3,7 +3,6 @@ import { PIXELS_PER_METER, TILE_SIZE } from './consts';
 
 export interface Map {
     tiles: matrix.Matrix<Int8Array>;
-    tileSize: number;
 }
 
 export interface RegionsMap {
@@ -11,14 +10,14 @@ export interface RegionsMap {
     biggest: number;
 }
 
-export const create = (tiles: matrix.Matrix<Int8Array>, tileSize): Map => {
-    return { tiles, tileSize };
+export const create = (tiles: matrix.Matrix<Int8Array>): Map => {
+    return { tiles };
 };
 
 export const getCols = (map: Map) => matrix.getCols(map.tiles);
 export const getRows = (map: Map) => matrix.getRows(map.tiles);
-export const getCol = (map: Map, x: number) => Math.floor(x / map.tileSize);
-export const getRow = (map: Map, y: number) => Math.floor(y / map.tileSize);
+export const getCol = (map: Map, x: number) => Math.floor(x / TILE_SIZE);
+export const getRow = (map: Map, y: number) => Math.floor(y / TILE_SIZE);
 
 export const getCellValue = (map: Map, row: number, col: number) =>
     matrix.get(map.tiles, row, col);
@@ -36,8 +35,6 @@ export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2:
 
     return false;
 };
-
-export const getTileSize = (map: Map) => map.tileSize;
 
 export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x2: number) => {
     const row = getRow(map, y);
@@ -196,8 +193,8 @@ const simpleRender = (map: Map, canvas: HTMLCanvasElement) => {
 
 export const render = (map: Map) => {
     const canvas = document.createElement('canvas');
-    canvas.width = getTileSize(map) * getCols(map) * PIXELS_PER_METER;
-    canvas.height = getTileSize(map) * getRows(map) * PIXELS_PER_METER;
+    canvas.width = TILE_SIZE * getCols(map) * PIXELS_PER_METER;
+    canvas.height = TILE_SIZE * getRows(map) * PIXELS_PER_METER;
     simpleRender(map, canvas);
     return canvas;
 };

@@ -149,7 +149,7 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
         next: null,
     };
 
-    const levelMap = map.create(map.randomTiles(), TILE_SIZE);
+    const levelMap = map.create(map.randomTiles());
     const renderedMap = map.render(levelMap);
     const regions = map.calculateRegions(levelMap);
     states.current.player.position = findPosition(levelMap, regions);
