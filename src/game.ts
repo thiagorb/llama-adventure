@@ -12,6 +12,7 @@ import * as physics from './physics';
 import * as map from './map';
 import * as state from './state';
 import * as matrix from './matrix';
+import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
 
@@ -118,17 +119,7 @@ const findPosition = (levelMap: map.Map, regions: map.RegionsMap) => {
     throw new Error('Unable to find position');
 };
 
-const deepCopy = obj => {
-    if (obj.constructor !== Object) {
-        return obj;
-    }
-
-    const copy = {};
-    Object.keys(obj).forEach(k => copy[k] = deepCopy(obj[k]));
-    return copy;
-};
-
-interface Game {
+export interface Game {
     canvas: HTMLCanvasElement;
     states: state.States;
     stepsSinceBeginning: number;
