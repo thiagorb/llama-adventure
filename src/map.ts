@@ -1,5 +1,5 @@
 import * as matrix from './matrix';
-import { PIXELS_PER_METER, TILE_SIZE } from './consts';
+import { METERS_PER_PIXEL, PIXELS_PER_METER, PLAYER_HEIGHT, PLAYER_WIDTH, TILE_SIZE } from './consts';
 
 export interface Map {
     tiles: matrix.Matrix<Int8Array>;
@@ -45,6 +45,26 @@ export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x
     }
 
     return false;
+};
+
+export const collidesWithRectangle = (map: Map, left: number, top: number, width: number, height: number) => {
+    const right = left + PLAYER_WIDTH - METERS_PER_PIXEL;
+
+    if (collidesWithHorizontalSegment(map, top, left, right)) {
+        return true;
+    }
+
+    const bottom = top + PLAYER_HEIGHT - METERS_PER_PIXEL;
+
+    if (collidesWithHorizontalSegment(map, bottom, left, right)) {
+        return true;
+    }
+
+    if (collidesWithVerticalSegment(map, left, top, bottom)) {
+        return true;
+    }
+
+    return collidesWithVerticalSegment(map, right, top, bottom);
 };
 
 export const randomTiles = () => {
