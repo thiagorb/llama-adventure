@@ -1,6 +1,8 @@
 import * as player from './player';
+import * as state from './state';
 import { playerMapCollision } from './collision';
 import { Vector2D } from './state';
+import { keys } from './keys';
 
 type Accessor<T> = (state) => T;
 
@@ -15,8 +17,8 @@ const move = movePlayer;
 const update = player.update;
 const detectCollision = (levelMap, states) => playerMapCollision(levelMap, states.next.player);
 
-export const step = (levelMap, states) => {
+export const step = (levelMap, states: state.States) => {
     move(states);
-    update(states);
+    update(keys, states.current.player, states.next.player);
     detectCollision(levelMap, states);
 };

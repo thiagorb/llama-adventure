@@ -3,30 +3,27 @@ import {
     METERS_PER_SECOND_PER_SECOND, PLAYER_HEIGHT, PLAYER_WIDTH,
     STEPS_PER_SECOND
 } from './consts';
-import { keys } from './keys';
 import * as sprites from './sprites';
 import * as state from './state';
+import { Keys } from './keys';
 
-const calculateJumping = (player: state.Player): number => {
-    if (player.touchingCeiling) {
+const calculateJumping = (keys: Keys, state: state.Player): number => {
+    if (state.touchingCeiling) {
         return 0;
     }
 
-    if (player.touchingFloor && keys.ArrowUp) {
+    if (state.touchingFloor && keys.ArrowUp) {
         return STEPS_PER_SECOND * 0.7;
     }
 
-    if (player.jumping) {
-        return keys.ArrowUp ? player.jumping - 1 : 0;
+    if (state.jumping) {
+        return keys.ArrowUp ? state.jumping - 1 : 0;
     }
 
     return 0;
 };
 
-export const update = (states: state.States) => {
-    const current = states.current.player;
-    const next = states.next.player;
-
+export const update = (keys: Keys, current: state.Player, next: state.Player) => {
     const MAX_HORIZONTAL_SPEED = 6 * METERS_PER_SECOND;
     const HORIZONTAL_ACCELERATION = 20 * METERS_PER_SECOND_PER_SECOND;
     const JUMP_POWER = 7 * METERS_PER_SECOND;
@@ -61,7 +58,7 @@ export const update = (states: state.States) => {
         );
     }
 
-    next.jumping = calculateJumping(current);
+    next.jumping = calculateJumping(keys, current);
 
     next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames(sprites.get('llama'));
 };
