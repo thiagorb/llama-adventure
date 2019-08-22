@@ -41,33 +41,6 @@ const render = (game: Game) => {
     context.fillStyle = 'yellow';
     context.fillRect(game.states.current.goal.position.x, game.states.current.goal.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
 
-
-
-
-    ///DEBUUUUG
-    if (debugRegion) {
-        let playerCol = map.getCol(game.states.current.player.position.x);
-        let playerRow = map.getRow(game.states.current.player.position.y);
-        for (let i = 0; i < debugRegion.length; i++) {
-            const { row, col } = debugRegion[i];
-            if (playerCol === col && playerRow === row) {
-                debugRegion[i].passed = true;
-            }
-
-            if (debugRegion[i].passed) {
-                context.fillStyle = 'rgba(128, 0, 128, 0.25)';
-            } else {
-                context.fillStyle = 'rgba(128, 0, 128, 0.5)';
-            }
-
-            context.fillRect(col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-        }
-    }
-    ///DEBUUUUG
-
-
-
-
     context.restore();
 
     context.font = '10px sans-serif';
@@ -78,13 +51,6 @@ const render = (game: Game) => {
     context.fillText(game.states.current.player.position.y.toFixed(), 30, 30);
     context.fillText(game.states.current.goal.position.x.toFixed(), 5, 40);
     context.fillText(game.states.current.goal.position.y.toFixed(), 30, 40);
-
-
-    ///DEBUUUUG
-    if (debugRegion) {
-        context.fillText(debugRegion.length.toString(), 5, 50);
-    }
-    ///DEBUUUUG
 
     if (game.finished) {
         game.fadingOut = Math.min(300, game.fadingOut + 1);
@@ -169,27 +135,33 @@ export interface Game {
     fadingOut: number;
 }
 
-let debugRegion;
 const randomizePositions = (levelMap, playerPosition, goalPosition) => {
     const biggestRegion = simulation.findBiggestRegion(levelMap);
-    debugRegion = biggestRegion;
-    console.log(biggestRegion);
-    for (let attempt = 0; attempt < 100; attempt++) {
-        const player = biggestRegion[Math.floor(Math.random() * biggestRegion.length)];
-        const goal = biggestRegion[Math.floor(Math.random() * biggestRegion.length)];
+    const cols = biggestRegion.map(r => r.col).sort();
+    const medianCol = cols[Math.ceil(cols.length / 2)];
+    const leftRegion = biggestRegion.filter(({ col }) => col < medianCol);
+    const rightRegion = biggestRegion.filter(({ col }) => col >= medianCol);
+    const playerLeft = Math.random() < 0.5;
+    const playerRegion = playerLeft ? leftRegion : rightRegion;
+    const goalRegion = playerLeft ? rightRegion: leftRegion;
+
+    let best = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+        const player = playerRegion[Math.floor(Math.random() * playerRegion.length)];
+        const goal = goalRegion[Math.floor(Math.random() * goalRegion.length)];
         const dy = player.row - goal.row;
         const dx = player.col - goal.col;
         const distance2 = dy * dy + dx * dx;
-        if (distance2 > 400) {
-            playerPosition.x = player.col * TILE_SIZE;
-            playerPosition.y = player.row * TILE_SIZE;
-            goalPosition.x = goal.col * TILE_SIZE;
-            goalPosition.y = goal.row * TILE_SIZE;
-            console.log(distance2, goalPosition, playerPosition);
-            return;
+        console.log(Math.sqrt(distance2));
+        if (best === null || distance2 > best.distance2) {
+            best = { player, goal, distance2 };
         }
     }
-    throw new Error('Unable to find positions');
+
+    playerPosition.x = best.player.col * TILE_SIZE;
+    playerPosition.y = best.player.row * TILE_SIZE;
+    goalPosition.x = best.goal.col * TILE_SIZE;
+    goalPosition.y = best.goal.row * TILE_SIZE;
 };
 
 export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
