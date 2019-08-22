@@ -8,3 +8,4 @@ export const PLAYER_WIDTH = 1;
 export const PLAYER_HEIGHT = 1.5;
 export const SCREEN_WIDTH = 320;
 export const SCREEN_HEIGHT = 240;
+export const HORIZONTAL_ACCELERATION = 20 * METERS_PER_SECOND_PER_SECOND;

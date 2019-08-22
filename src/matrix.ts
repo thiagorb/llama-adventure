@@ -43,6 +43,16 @@ export const set = <T extends TypedArray>(matrix: Matrix<T>, row: number, col: n
     matrix.values[row * matrix.cols + col] = value;
 };
 
+export const replace = <T extends TypedArray>(matrix: Matrix<T>, find: number, replace: number) => {
+    for (let row = getRows(matrix) - 1; row >= 0; row--) {
+        for (let col = 0; col < getCols(matrix); col++) {
+            if (get(matrix, row, col) === find) {
+                set(matrix, row, col, replace);
+            }
+        }
+    }
+};
+
 export const has = <T extends TypedArray>(matrix: Matrix<T>, row, col) => row >= 0 && col >= 0 && row < matrix.rows && col < matrix.cols;
 
 export const getCols = <T extends TypedArray>(matrix: Matrix<T>) => matrix.cols;

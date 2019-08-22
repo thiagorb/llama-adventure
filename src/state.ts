@@ -26,26 +26,21 @@ export interface States {
     next: State;
 }
 
+export const createVector = () => ({ x: 0, y: 0 });
+
+export const createPlayer = () => ({
+    position: createVector(),
+    speed: createVector(),
+    left: false,
+    jumping: 0,
+    touchingFloor: false,
+    touchingCeiling: false,
+    frame: 0,
+});
+
 export const create = (): State => ({
-    player: {
-        position: {
-            x: 0,
-            y: 0,
-        },
-        speed: {
-            x: 0,
-            y: 0,
-        },
-        left: false,
-        jumping: 0,
-        touchingFloor: false,
-        touchingCeiling: false,
-        frame: 0,
-    },
+    player: createPlayer(),
     goal: {
-        position: {
-            x: 0,
-            y: 0,
-        },
+        position: createVector(),
     },
 });

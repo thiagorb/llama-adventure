@@ -1,11 +1,16 @@
 import {
+    HORIZONTAL_ACCELERATION,
     METERS_PER_SECOND,
-    METERS_PER_SECOND_PER_SECOND, PLAYER_HEIGHT, PLAYER_WIDTH,
+    METERS_PER_SECOND_PER_SECOND,
+    PLAYER_HEIGHT,
+    PLAYER_WIDTH,
     STEPS_PER_SECOND
 } from './consts';
 import * as sprites from './sprites';
 import * as state from './state';
 import { Keys } from './keys';
+
+export const LONG_JUMP_EFFECT_TIME = STEPS_PER_SECOND * 0.7;
 
 const calculateJumping = (keys: Keys, state: state.Player): number => {
     if (state.touchingCeiling) {
@@ -13,7 +18,7 @@ const calculateJumping = (keys: Keys, state: state.Player): number => {
     }
 
     if (state.touchingFloor && keys.ArrowUp) {
-        return STEPS_PER_SECOND * 0.7;
+        return LONG_JUMP_EFFECT_TIME;
     }
 
     if (state.jumping) {
@@ -25,10 +30,12 @@ const calculateJumping = (keys: Keys, state: state.Player): number => {
 
 export const update = (keys: Keys, current: state.Player, next: state.Player) => {
     const MAX_HORIZONTAL_SPEED = 6 * METERS_PER_SECOND;
-    const HORIZONTAL_ACCELERATION = 20 * METERS_PER_SECOND_PER_SECOND;
     const JUMP_POWER = 7 * METERS_PER_SECOND;
     const GRAVITY = 20 * METERS_PER_SECOND_PER_SECOND;
     const TERMINAL_VELOCITY = 8 * METERS_PER_SECOND;
+
+    next.position.x = current.position.x + current.speed.x;
+    next.position.y = current.position.y + current.speed.y;
 
     if (keys.ArrowLeft) {
         next.speed.x = Math.max(current.speed.x - HORIZONTAL_ACCELERATION, -MAX_HORIZONTAL_SPEED);
@@ -60,7 +67,7 @@ export const update = (keys: Keys, current: state.Player, next: state.Player) =>
 
     next.jumping = calculateJumping(keys, current);
 
-    next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames(sprites.get('llama'));
+    next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames('llama');
 };
 
 export const render = (context: CanvasRenderingContext2D, state: state.State) => {

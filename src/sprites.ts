@@ -39,9 +39,9 @@ export const draw = (context: CanvasRenderingContext2D, sprite: Sprite, x: numbe
     );
 };
 
-export const get = (code: SpriteCode) => sprites[code];
+export const get = (code: SpriteCode): Sprite => sprites[code];
 
-export const getFrames = (sprite: Sprite) => sprite.frames;
+export const getFrames = (code: SpriteCode) => spritesDefinitions[code].frames;
 
 export const initialize = async (): Promise<void> => {
     const promises = [];

@@ -16,18 +16,18 @@ export const create = (tiles: matrix.Matrix<Int8Array>): Map => {
 
 export const getCols = (map: Map) => matrix.getCols(map.tiles);
 export const getRows = (map: Map) => matrix.getRows(map.tiles);
-export const getCol = (map: Map, x: number) => Math.floor(x / TILE_SIZE);
-export const getRow = (map: Map, y: number) => Math.floor(y / TILE_SIZE);
+export const getCol = (x: number) => Math.floor(x / TILE_SIZE);
+export const getRow = (y: number) => Math.floor(y / TILE_SIZE);
 
 export const getCellValue = (map: Map, row: number, col: number) =>
     matrix.get(map.tiles, row, col);
 
 export const getPositionValue = (map: Map, x: number, y: number) =>
-    getCellValue(map, getRow(map, y), getCol(map, x));
+    getCellValue(map, getRow(y), getCol(x));
 
 export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2: number) => {
-    const col = getCol(map, x);
-    for (let row = getRow(map, y1); row <= getRow(map, y2); row++) {
+    const col = getCol(x);
+    for (let row = getRow(y1); row <= getRow(y2); row++) {
         if (isSolidCell(map, row, col)) {
             return true;
         }
@@ -37,8 +37,8 @@ export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2:
 };
 
 export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x2: number) => {
-    const row = getRow(map, y);
-    for (let col = getCol(map, x1); col <= getCol(map, x2); col++) {
+    const row = getRow(y);
+    for (let col = getCol(x1); col <= getCol(x2); col++) {
         if (isSolidCell(map, row, col)) {
             return true;
         }
@@ -110,7 +110,9 @@ export const randomTiles = () => {
 
 const isSolidValue = value => value > 0;
 export const isSolidPosition = (map: Map, x, y) => isSolidValue(getPositionValue(map, x, y));
-export const isSolidCell = (map: Map, row, col) => isSolidValue(getCellValue(map, row, col));
+export const isSolidCell = (map: Map, row, col) =>
+    !matrix.has(map.tiles, row, col) ||
+    isSolidValue(getCellValue(map, row, col));
 
 export const calculateRegions = (map: Map): RegionsMap => {
     let regions = 0;
