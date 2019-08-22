@@ -71,10 +71,10 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
         ArrowLeft: false,
     };
 
-    for (let startPressingRight = 0; startPressingRight < MAX_SIMULATION_TIME; startPressingRight += REACTION_TIME) {
-        for (let stopPressingRight = MAX_SIMULATION_TIME; stopPressingRight >= startPressingRight + REACTION_TIME; stopPressingRight -= REACTION_TIME) {
-            for (let startPressingLeft = stopPressingRight; startPressingLeft < MAX_SIMULATION_TIME; startPressingLeft += REACTION_TIME) {
-                for (let stopPressingLeft = startPressingLeft; stopPressingLeft < MAX_SIMULATION_TIME; stopPressingLeft += REACTION_TIME) {
+    for (let startPressingRight = 0; startPressingRight < MAX_SIMULATION_TIME + REACTION_TIME; startPressingRight += REACTION_TIME) {
+        for (let stopPressingRight = MAX_SIMULATION_TIME + REACTION_TIME; stopPressingRight >= startPressingRight; stopPressingRight -= REACTION_TIME) {
+            for (let startPressingLeft = stopPressingRight; startPressingLeft < MAX_SIMULATION_TIME + REACTION_TIME; startPressingLeft += REACTION_TIME) {
+                for (let stopPressingLeft = startPressingLeft; stopPressingLeft < MAX_SIMULATION_TIME + REACTION_TIME; stopPressingLeft += REACTION_TIME) {
                     for (let startPressingUp = 0; startPressingUp <= MAX_UP_DELAY + REACTION_TIME; startPressingUp += REACTION_TIME) {
                         for (let timePressingUp = 1; timePressingUp <= player.LONG_JUMP_EFFECT_TIME * 2; timePressingUp *= 2) {
                             current.position.x = 0;
