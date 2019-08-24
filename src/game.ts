@@ -135,8 +135,8 @@ const step = (game: Game, steps: number) => {
             }
         }
         let temp = game.states.next;
-        game.states.current = game.states.next;
-        game.states.next = temp;
+        game.states.next = game.states.current;
+        game.states.current = temp;
         if (reachedGoal(game.states.current)) {
             game.finished = true;
         }
