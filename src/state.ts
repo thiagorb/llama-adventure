@@ -1,3 +1,5 @@
+import * as sprites from './sprites';
+
 export interface Vector2D {
     x: number;
     y: number;
@@ -7,7 +9,7 @@ export interface Object {
     position: Vector2D;
 }
 
-export interface Player extends Object{
+export interface Player extends Object {
     speed: Vector2D;
     left: boolean;
     jumping: number;
@@ -42,5 +44,5 @@ export const create = (): State => ({
     player: createPlayer(),
     goal: {
         position: createVector(),
-    },
+    }
 });

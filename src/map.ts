@@ -10,6 +10,11 @@ export interface RegionsMap {
     biggest: number;
 }
 
+export interface Cell {
+    row: number;
+    col: number;
+}
+
 export const create = (tiles: matrix.Matrix<Int8Array>): Map => {
     return { tiles };
 };

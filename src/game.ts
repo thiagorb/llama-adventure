@@ -1,4 +1,5 @@
 import {
+    METERS_PER_PIXEL,
     PIXELS_PER_METER,
     PLAYER_HEIGHT,
     PLAYER_WIDTH,
@@ -13,6 +14,7 @@ import * as map from './map';
 import * as state from './state';
 import * as matrix from './matrix';
 import * as simulation from './simulation';
+import * as sprites from './sprites';
 import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
@@ -35,6 +37,12 @@ const render = (game: Game) => {
     context.scale(1 / PIXELS_PER_METER, 1 / PIXELS_PER_METER);
     context.drawImage(game.renderedMap, 0, 0);
     context.restore();
+
+    for (let item of game.items) {
+        if (!item.collected) {
+            sprites.draw(context, item.sprite, item.position.x, item.position.y, item.width, item.height);
+        }
+    }
 
     player.render(context, game.states.current);
 
@@ -69,10 +77,51 @@ const distance2 = (p1: state.Vector2D, p2: state.Vector2D) => {
 const reachedGoal = (state: state.State) =>
     distance2(state.player.position, state.goal.position) < PLAYER_HEIGHT * PLAYER_HEIGHT;
 
+const checkItemsCollection = (items: Array<Item>, playerPosition: state.Vector2D) => {
+    const minX = playerPosition.x - 2 * PLAYER_WIDTH;
+    const maxX = playerPosition.x + 2 * PLAYER_WIDTH;
+    let minStartIndex = 0;
+    let maxStartIndex = items.length - 1;
+    while (minStartIndex < maxStartIndex) {
+        const middle = Math.floor((minStartIndex + maxStartIndex + 1) / 2);
+        if (items[middle].position.x > minX) {
+            maxStartIndex = middle - 1;
+            continue;
+        }
+
+        minStartIndex = middle;
+        if (items[middle].position.x === minX) {
+            break;
+        }
+    }
+
+    for (let i = minStartIndex; i < items.length && items[i].position.x < maxX; i++) {
+        const item = items[i];
+        if (item.position.x + item.width < playerPosition.x) {
+            continue;
+        }
+
+        if (item.position.x > playerPosition.x + PLAYER_WIDTH) {
+            continue;
+        }
+
+        if (item.position.y + item.height < playerPosition.y) {
+            continue;
+        }
+
+        if (item.position.y > playerPosition.y + PLAYER_HEIGHT) {
+            continue;
+        }
+
+        item.collected = true;
+    }
+};
+
 const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
         game.stepCount++;
         if (!game.finished) {
+            checkItemsCollection(game.items, game.states.current.player.position);
             physics.step(game.levelMap, game.states);
         }
         let temp = game.states.next;
@@ -120,6 +169,13 @@ const findPosition = (levelMap: map.Map, regions: map.RegionsMap) => {
     throw new Error('Unable to find position');
 };
 
+export interface Item extends state.Object {
+    sprite: sprites.Sprite;
+    collected: boolean;
+    width: number;
+    height: number;
+}
+
 export interface Game {
     canvas: HTMLCanvasElement;
     states: state.States;
@@ -129,18 +185,19 @@ export interface Game {
     fps: number;
     sps: number;
     levelMap: map.Map;
+    region: Array<map.Cell>
     renderedMap: CanvasImageSource;
     secondInterval: number;
     finished: boolean;
     fadingOut: number;
+    items: Array<Item>;
 }
 
-const randomizePositions = (levelMap, playerPosition, goalPosition) => {
-    const biggestRegion = simulation.findBiggestRegion(levelMap);
-    const cols = biggestRegion.map(r => r.col).sort();
+const randomizePositions = (region: Array<map.Cell>, playerPosition: state.Vector2D, goalPosition: state.Vector2D) => {
+    const cols = region.map(r => r.col).sort();
     const medianCol = cols[Math.ceil(cols.length / 2)];
-    const leftRegion = biggestRegion.filter(({ col }) => col < medianCol);
-    const rightRegion = biggestRegion.filter(({ col }) => col >= medianCol);
+    const leftRegion = region.filter(({ col }) => col < medianCol);
+    const rightRegion = region.filter(({ col }) => col >= medianCol);
     const playerLeft = Math.random() < 0.5;
     const playerRegion = playerLeft ? leftRegion : rightRegion;
     const goalRegion = playerLeft ? rightRegion: leftRegion;
@@ -164,6 +221,32 @@ const randomizePositions = (levelMap, playerPosition, goalPosition) => {
     goalPosition.y = best.goal.row * TILE_SIZE;
 };
 
+const randomizeItems = (region: Array<map.Cell>): Array<Item> => {
+    const items: Array<Item> = [];
+    const ITEMS_COUNT = 50;
+    const step = region.length / ITEMS_COUNT;
+    const itemSprites = [
+        sprites.get('corn'),
+        sprites.get('pepper'),
+        sprites.get('cactus'),
+    ];
+    for (let i = 0; i < ITEMS_COUNT; i++) {
+        const cell = region[Math.floor(i * step)];
+        const sprite = itemSprites[i % 3];
+        items.push({
+            position: {
+                x: cell.col * TILE_SIZE,
+                y: cell.row * TILE_SIZE
+            },
+            sprite,
+            collected: false,
+            width: sprite.width * METERS_PER_PIXEL,
+            height: sprite.height * METERS_PER_PIXEL,
+        });
+    }
+    return items.sort((a, b) => a.position.x - b.position.x);
+};
+
 export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
     const states: state.States = {
         current: state.create(),
@@ -172,10 +255,9 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
 
     const levelMap = map.create(map.randomTiles());
     const renderedMap = map.render(levelMap);
-    //const regions = map.calculateRegions(levelMap);
-    //states.current.player.position = findPosition(levelMap, regions);
-    //states.current.goal.position = findPosition(levelMap, regions);
-    randomizePositions(levelMap, states.current.player.position, states.current.goal.position);
+    const region = simulation.findBiggestRegion(levelMap);
+    randomizePositions(region, states.current.player.position, states.current.goal.position);
+    const items: Array<Item> = randomizeItems(region);
     states.next = deepCopy(states.current);
 
     return {
@@ -187,11 +269,13 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
         fps: 0,
         sps: 0,
         levelMap,
+        region,
         renderedMap,
         secondInterval: null,
         finished: false,
         fadingOut: 0,
-    }
+        items,
+    };
 };
 
 export const start = (game: Game) => {

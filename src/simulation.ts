@@ -18,11 +18,6 @@ interface BoundingBox {
     colWidth: number;
 }
 
-interface Cell {
-    row: number;
-    col: number;
-}
-
 const getBoundingBox = (position: state.Vector2D): BoundingBox => {
     const rowTop = map.getRow(position.y);
     const colLeft = map.getCol(position.x);
@@ -154,7 +149,7 @@ const collides = (levelMap: map.Map, box: BoundingBox) => {
     return false;
 };
 
-export const findBiggestRegion = (levelMap: map.Map): Array<Cell> => {
+export const findBiggestRegion = (levelMap: map.Map): Array<map.Cell> => {
     const possibleMovements: Array<Array<BoundingBox>> = [
         [getBoundingBox({x: TILE_SIZE, y: 0})],
         [getBoundingBox({x: -TILE_SIZE, y: 0})],
