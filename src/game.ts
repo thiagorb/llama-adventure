@@ -15,6 +15,7 @@ import * as state from './state';
 import * as matrix from './matrix';
 import * as simulation from './simulation';
 import * as sprites from './sprites';
+import * as sound from './sound';
 import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
@@ -97,6 +98,10 @@ const checkItemsCollection = (items: Array<Item>, playerPosition: state.Vector2D
 
     for (let i = minStartIndex; i < items.length && items[i].position.x < maxX; i++) {
         const item = items[i];
+        if (item.collected) {
+            continue;
+        }
+
         if (item.position.x + item.width < playerPosition.x) {
             continue;
         }
@@ -113,6 +118,8 @@ const checkItemsCollection = (items: Array<Item>, playerPosition: state.Vector2D
             continue;
         }
 
+        sound.playCollectSound();
+
         item.collected = true;
     }
 };
@@ -123,6 +130,9 @@ const step = (game: Game, steps: number) => {
         if (!game.finished) {
             checkItemsCollection(game.items, game.states.current.player.position);
             physics.step(game.levelMap, game.states);
+            if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
+                sound.playJumpSound();
+            }
         }
         let temp = game.states.next;
         game.states.current = game.states.next;
