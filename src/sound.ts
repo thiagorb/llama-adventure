@@ -1,3 +1,5 @@
+import { cachedInstance } from './utils';
+
 const enum Notes {
     G4 = 392,
     C5 = 523.25,
@@ -25,12 +27,6 @@ const createSound = (player: SoundPlayer) => {
     });
 
     return () => player(getOscillator(), getGain(), getAudio())
-};
-
-const cachedInstance = <T>(initializer: () => T) => {
-    let instance: T = null;
-
-    return () => instance = instance || initializer();
 };
 
 const getAudio = cachedInstance(() => new AudioContext());
