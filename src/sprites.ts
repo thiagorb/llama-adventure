@@ -37,7 +37,7 @@ const spritesDefinitions = {
     }
 };
 
-type SpriteCode = keyof typeof spritesDefinitions;
+export type SpriteCode = keyof typeof spritesDefinitions;
 
 let sprites = {};
 

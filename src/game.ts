@@ -53,13 +53,13 @@ const render = (game: Game) => {
     context.restore();
 
     context.font = '10px sans-serif';
-    context.fillStyle = 'blue';
-    context.fillText(game.sps.toString(), 5, 10);
-    context.fillText(game.fps.toString(), 5, 20);
-    context.fillText(game.states.current.player.position.x.toFixed(), 5, 30);
-    context.fillText(game.states.current.player.position.y.toFixed(), 30, 30);
-    context.fillText(game.states.current.goal.position.x.toFixed(), 5, 40);
-    context.fillText(game.states.current.goal.position.y.toFixed(), 30, 40);
+    context.fillStyle = 'white';
+    context.fillText(`SCORE: ${game.score}`, 5, 10);
+
+    if (process.env.NODE_ENV !== 'production') {
+        context.fillText(game.sps.toString(), 5, 20);
+        context.fillText(game.fps.toString(), 5, 30);
+    }
 
     if (game.finished) {
         game.fadingOut = Math.min(300, game.fadingOut + 1);
@@ -78,25 +78,27 @@ const distance2 = (p1: state.Vector2D, p2: state.Vector2D) => {
 const reachedGoal = (state: state.State) =>
     distance2(state.player.position, state.goal.position) < PLAYER_HEIGHT * PLAYER_HEIGHT;
 
-const checkItemsCollection = (items: Array<Item>, playerPosition: state.Vector2D) => {
+const checkItemsCollection = (game: Game) => {
+    const items = game.items;
+    const playerPosition = game.states.current.player.position;
     const minX = playerPosition.x - 2 * PLAYER_WIDTH;
     const maxX = playerPosition.x + 2 * PLAYER_WIDTH;
     let minStartIndex = 0;
     let maxStartIndex = items.length - 1;
     while (minStartIndex < maxStartIndex) {
         const middle = Math.floor((minStartIndex + maxStartIndex + 1) / 2);
-        if (items[middle].position.x > minX) {
+        if (items[middle].position.x > maxX) {
             maxStartIndex = middle - 1;
             continue;
         }
 
         minStartIndex = middle;
-        if (items[middle].position.x === minX) {
+        if (items[middle].position.x === maxX) {
             break;
         }
     }
 
-    for (let i = minStartIndex; i < items.length && items[i].position.x < maxX; i++) {
+    for (let i = minStartIndex; i >= 0 && items[i].position.x >= minX; i--) {
         const item = items[i];
         if (item.collected) {
             continue;
@@ -119,8 +121,8 @@ const checkItemsCollection = (items: Array<Item>, playerPosition: state.Vector2D
         }
 
         sound.playCollectSound();
-
         item.collected = true;
+        game.score += item.score;
     }
 };
 
@@ -128,7 +130,7 @@ const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
         game.stepCount++;
         if (!game.finished) {
-            checkItemsCollection(game.items, game.states.current.player.position);
+            checkItemsCollection(game);
             physics.step(game.levelMap, game.states);
             if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
                 sound.playJumpSound();
@@ -184,6 +186,7 @@ export interface Item extends state.Object {
     collected: boolean;
     width: number;
     height: number;
+    score: number;
 }
 
 export interface Game {
@@ -194,6 +197,7 @@ export interface Game {
     frameCount: number;
     fps: number;
     sps: number;
+    score: number;
     levelMap: map.Map;
     region: Array<map.Cell>
     renderedMap: CanvasImageSource;
@@ -235,19 +239,31 @@ const randomizeItems = (region: Array<map.Cell>): Array<Item> => {
     const items: Array<Item> = [];
     const ITEMS_COUNT = 50;
     const step = region.length / ITEMS_COUNT;
-    const itemSprites = [
-        sprites.get('corn'),
-        sprites.get('pepper'),
-        sprites.get('cactus'),
+    const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number }>  = [
+        {
+            sprite: 'corn',
+            score: 10,
+        },
+        {
+            sprite: 'pepper',
+            score: 20,
+        },
+        {
+            sprite: 'cactus',
+            score: 50,
+        },
     ];
+
     for (let i = 0; i < ITEMS_COUNT; i++) {
         const cell = region[Math.floor(i * step)];
-        const sprite = itemSprites[i % 3];
+        const itemType = itemsPrototypes[i % 3];
+        const sprite = sprites.get(itemType.sprite);
         items.push({
             position: {
                 x: cell.col * TILE_SIZE,
                 y: cell.row * TILE_SIZE
             },
+            score: itemType.score,
             sprite,
             collected: false,
             width: sprite.width * METERS_PER_PIXEL,
@@ -278,6 +294,7 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
         frameCount: 0,
         fps: 0,
         sps: 0,
+        score: 0,
         levelMap,
         region,
         renderedMap,
