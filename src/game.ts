@@ -152,7 +152,9 @@ const loopFactory = (game: Game) => {
         game.stepsSinceBeginning = currentStep;
         render(game);
         game.frameCount++;
-        window.requestAnimationFrame(loop);
+        if (!game.finished || !game.fadingOut) {
+            window.requestAnimationFrame(loop);
+        }
     };
 
     return loop;
@@ -281,7 +283,7 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
 
     const levelMap = map.create(map.randomTiles());
     const renderedMap = map.render(levelMap);
-    const region = simulation.findBiggestRegion(levelMap);
+    const region = await simulation.findBiggestRegion(levelMap);
     randomizePositions(region, states.current.player.position, states.current.goal.position);
     const items: Array<Item> = randomizeItems(region);
     states.next = deepCopy(states.current);

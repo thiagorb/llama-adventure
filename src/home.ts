@@ -1,14 +1,15 @@
+import * as transitions from './transitions';
 import { getKeys } from './keys';
 
 export const start = (callback) => {
     const OPTIONS_Y = 100;
     const OPTIONS_HEIGHT = 20;
-    let seletedOption = 0;
+    let selectedOption = 0;
     const START_GAME = 'START GAME';
     const options = [START_GAME];
     let previousUp = false;
     let previousDown = false;
-    let fadingOut = 0;
+    let finished = false;
 
     const canvas = document.querySelector('canvas');
 
@@ -29,19 +30,24 @@ export const start = (callback) => {
         )
     )));
 
-    canvas.addEventListener('mousemove', mapOption(option => seletedOption = option));
+    canvas.addEventListener('mousemove', mapOption(option => selectedOption = option));
     canvas.addEventListener('click', mapOption(option => {
         if (options[option] === START_GAME) {
-            fadingOut = 1;
+            finished = true;
+            transitions.fadeOut().then(callback);
         }
     }));
 
     const loop = () => {
+        if (finished) {
+            return;
+        }
+
         if (!previousUp && getKeys().ArrowUp) {
-            seletedOption = (options.length + seletedOption - 1) % options.length;
+            selectedOption = (options.length + selectedOption - 1) % options.length;
         }
         if (!previousDown && getKeys().ArrowDown) {
-            seletedOption = (seletedOption + 1) % options.length;
+            selectedOption = (selectedOption + 1) % options.length;
         }
         previousUp = getKeys().ArrowUp;
         previousDown = getKeys().ArrowDown;
@@ -58,7 +64,7 @@ export const start = (callback) => {
         context.fillStyle = 'blue';
         context.textBaseline = 'top';
         context.save();
-        context.translate(95, 105 + seletedOption * OPTIONS_HEIGHT);
+        context.translate(95, 105 + selectedOption * OPTIONS_HEIGHT);
         context.beginPath();
         context.moveTo(-15, -2);
         context.lineTo(-7, -2);
@@ -70,16 +76,6 @@ export const start = (callback) => {
         context.fill();
         context.restore();
 
-        if (fadingOut > 0) {
-            context.fillStyle = `rgba(0, 0, 0, ${((fadingOut) / 19)})`;
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            fadingOut++;
-
-            if (fadingOut === 20) {
-                callback();
-                return;
-            }
-        }
         requestAnimationFrame(loop);
     };
 

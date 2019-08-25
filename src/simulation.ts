@@ -10,6 +10,8 @@ import * as state from './state';
 import * as player from './player';
 import * as map from './map';
 import * as matrix from './matrix';
+import { cachedInstance } from './utils';
+import * as worker from './worker';
 
 interface BoundingBox {
     rowTop: number;
@@ -149,13 +151,13 @@ const collides = (levelMap: map.Map, box: BoundingBox) => {
     return false;
 };
 
-export const findBiggestRegion = (levelMap: map.Map): Array<map.Cell> => {
+export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Cell>> => {
     const possibleMovements: Array<Array<BoundingBox>> = [
         [getBoundingBox({x: TILE_SIZE, y: 0})],
         [getBoundingBox({x: -TILE_SIZE, y: 0})],
         [getBoundingBox({x: 0, y: -TILE_SIZE}), getBoundingBox({x: TILE_SIZE, y: -TILE_SIZE})],
         [getBoundingBox({x: 0, y: -TILE_SIZE}), getBoundingBox({x: -TILE_SIZE, y: -TILE_SIZE})],
-        ...simulateMovements(),
+        ...(await worker.getSimulatedMovements()),
     ];
 
     let regionsCount = 0;
