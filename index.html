@@ -15,11 +15,15 @@
                 outline: none;
                 -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
                 overflow: hidden;
+                touch-action: none;
             }
 
             body {
                 margin: 0;
                 padding: 0;
+            }
+
+            #container {
                 display: flex;
                 justify-content: center;
                 align-content: center;
@@ -73,10 +77,12 @@
         </style>
     </head>
     <body>
-        <canvas width="320" height="240"></canvas>
-        <div data-touch-key="ArrowUp"></div>
-        <div data-touch-key="ArrowLeft"></div>
-        <div data-touch-key="ArrowRight"></div>
-        <script src="./src/main.ts"></script>
+        <div id="container">
+            <canvas width="320" height="240"></canvas>
+            <div data-touch-key="ArrowUp"></div>
+            <div data-touch-key="ArrowLeft"></div>
+            <div data-touch-key="ArrowRight"></div>
+            <script src="./src/main.ts"></script>
+        </div>
     </body>
 </html>

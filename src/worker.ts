@@ -1,27 +1,28 @@
 import * as simulation from './simulation';
+import * as game from './game';
 import { cachedInstance } from './utils';
 
 const enum JobType {
     SimulateMovements,
+    CreateGame
 }
 
-export const getSimulatedMovements = cachedInstance((): Promise<any> => new Promise((resolve) => {
+const start = (job: JobType): Promise<any> => new Promise((resolve) => {
     const worker = new Worker(document.querySelector('script').src);
-    worker.addEventListener('message', (msg) => {
-        resolve(msg.data.movements);
-    });
-    worker.postMessage({ job: JobType.SimulateMovements });
-}));
+    worker.addEventListener('message', msg => resolve(msg.data));
+    worker.postMessage({ job });
+});
+
+export const getSimulatedMovements = cachedInstance(() => start(JobType.SimulateMovements));
+export const createGame = () => start(JobType.CreateGame);
 
 export const work = () => {
+    const handlers = new Map();
+    handlers.set(JobType.SimulateMovements, () => simulation.simulateMovements());
+    handlers.set(JobType.CreateGame, () => game.create());
+
     self.addEventListener('message', message => {
-        if (message.data.job === JobType.SimulateMovements) {
-            self.postMessage(
-                { movements: simulation.simulateMovements() },
-                null,
-                []
-            );
-            self.close();
-        }
+        self.postMessage(handlers.get(message.data.job)(), []);
+        self.close();
     });
 };

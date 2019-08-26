@@ -1,19 +1,22 @@
-import * as game from './game';
 import * as sprites from './sprites';
 import * as home from './home';
 import * as worker from './worker';
+import * as sound from './sound';
 
 if (typeof document !== 'undefined') {
     (async () => {
-        const spritesInit = sprites.initialize();
+        sprites.initialize();
         worker.getSimulatedMovements();
-
-        home.start(async () => {
-            await spritesInit;
-            const g = await game.create(document.querySelector('canvas'));
-            game.start(g);
-        });
+        home.start();
     })();
+
+    const enableSound = () => {
+        console.log(sound.getAudio().resume());
+        document.getElementById('container').removeEventListener('click', enableSound);
+        document.getElementById('container').removeEventListener('touchend', enableSound);
+    };
+    document.getElementById('container').addEventListener('click', enableSound);
+    document.getElementById('container').addEventListener('touchend', enableSound);
 } else {
     worker.work();
 }

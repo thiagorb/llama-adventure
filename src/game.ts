@@ -16,15 +16,18 @@ import * as matrix from './matrix';
 import * as simulation from './simulation';
 import * as sprites from './sprites';
 import * as sound from './sound';
+import * as transitions from './transitions';
+import * as home from './home';
 import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
 
 const render = (game: Game) => {
-    const context = game.canvas.getContext('2d');
+    const canvas = document.querySelector('canvas');
+    const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
 
-    context.clearRect(0, 0, game.canvas.width, game.canvas.height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     context.save();
     context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -59,12 +62,6 @@ const render = (game: Game) => {
     if (process.env.NODE_ENV !== 'production') {
         context.fillText(game.sps.toString(), 5, 20);
         context.fillText(game.fps.toString(), 5, 30);
-    }
-
-    if (game.finished) {
-        game.fadingOut = Math.min(300, game.fadingOut + 1);
-        context.fillStyle = `rgba(0, 0, 0, ${game.fadingOut / 300})`;
-        context.fillRect(0, 0, game.canvas.width, game.canvas.height);
     }
 };
 
@@ -141,6 +138,7 @@ const step = (game: Game, steps: number) => {
         game.states.current = temp;
         if (reachedGoal(game.states.current)) {
             game.finished = true;
+            transitions.fadeOut().then(() => home.start());
         }
     }
 };
@@ -152,7 +150,7 @@ const loopFactory = (game: Game) => {
         game.stepsSinceBeginning = currentStep;
         render(game);
         game.frameCount++;
-        if (!game.finished || !game.fadingOut) {
+        if (!game.finished) {
             window.requestAnimationFrame(loop);
         }
     };
@@ -192,7 +190,6 @@ export interface Item extends state.Object {
 }
 
 export interface Game {
-    canvas: HTMLCanvasElement;
     states: state.States;
     stepsSinceBeginning: number;
     stepCount: number;
@@ -205,7 +202,6 @@ export interface Game {
     renderedMap: CanvasImageSource;
     secondInterval: number;
     finished: boolean;
-    fadingOut: number;
     items: Array<Item>;
 }
 
@@ -275,21 +271,24 @@ const randomizeItems = (region: Array<map.Cell>): Array<Item> => {
     return items.sort((a, b) => a.position.x - b.position.x);
 };
 
-export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
+export const create = async (): Promise<Game> => {
     const states: state.States = {
         current: state.create(),
         next: null,
     };
 
+    console.log(new Date(), 'before map create');
     const levelMap = map.create(map.randomTiles());
+    console.log(new Date(), 'before map render');
     const renderedMap = map.render(levelMap);
+    console.log(new Date(), 'before find biggest');
     const region = await simulation.findBiggestRegion(levelMap);
+    console.log(new Date(), 'before randomize positions');
     randomizePositions(region, states.current.player.position, states.current.goal.position);
     const items: Array<Item> = randomizeItems(region);
     states.next = deepCopy(states.current);
 
     return {
-        canvas,
         states,
         stepsSinceBeginning: 0,
         stepCount: 0,
@@ -302,7 +301,6 @@ export const create = async (canvas: HTMLCanvasElement): Promise<Game> => {
         renderedMap,
         secondInterval: null,
         finished: false,
-        fadingOut: 0,
         items,
     };
 };

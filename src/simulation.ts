@@ -59,6 +59,7 @@ interface FoundMovementsPath {
 }
 
 export const simulateMovements = (): Array<Array<BoundingBox>> => {
+    console.log(new Date(), 'start simulate movements');
     const foundMovements = new Map<string, FoundMovementsPath>();
     const REACTION_TIME = 0.3 * STEPS_PER_SECOND;
 
@@ -136,6 +137,8 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
         }
     };
     transformMovements(foundMovements, []);
+
+    console.log(new Date(), 'end simulate movements');
 
     return movements;
 };

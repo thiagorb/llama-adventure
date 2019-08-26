@@ -2,6 +2,7 @@ import llama from '../sprites/llama.png';
 import corn from '../sprites/corn.png';
 import pepper from '../sprites/pepper.png';
 import cactus from '../sprites/cactus.png';
+import { cachedInstance } from './utils';
 
 export interface Sprite {
     image: HTMLImageElement;
@@ -66,10 +67,10 @@ export const get = (code: SpriteCode): Sprite => sprites[code];
 
 export const getFrames = (code: SpriteCode) => spritesDefinitions[code].frames;
 
-export const initialize = async (): Promise<void> => {
+export const initialize = cachedInstance(async (): Promise<void> => {
     const promises = [];
     for (let code in spritesDefinitions) {
         promises.push(load(code as SpriteCode).then(s => sprites[code] = s));
     }
     await Promise.all(promises);
-};
+});

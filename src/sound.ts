@@ -10,9 +10,16 @@ const enum Notes {
 
 type SoundPlayer = (oscillator: OscillatorNode, gain: GainNode, audio: AudioContext) => void;
 
-const createSound = (player: SoundPlayer) => {
+const dummyPlaySound = () => undefined;
+
+const createSound = (player: SoundPlayer) => cachedInstance(() => {
+    const audio = getAudio();
+
+    if (!audio) {
+        return dummyPlaySound;
+    }
+
     const getGain = cachedInstance(() => {
-        const audio = getAudio();
         const gain = audio.createGain();
         gain.connect(audio.destination);
         gain.gain.setValueAtTime(0, audio.currentTime);
@@ -27,11 +34,23 @@ const createSound = (player: SoundPlayer) => {
     });
 
     return () => player(getOscillator(), getGain(), getAudio())
-};
+});
 
-const getAudio = cachedInstance(() => new AudioContext());
+export const getAudio = cachedInstance((): AudioContext => {
+    if (typeof AudioContext !== 'undefined') {
+        return new AudioContext();
+    }
 
-export const playJumpSound = createSound((oscillator, gain, audio) => {
+    // @ts-ignore
+    if (typeof window.webkitAudioContext !== 'undefined') {
+        // @ts-ignore
+        return new window.webkitAudioContext();
+    }
+
+    return null;
+});
+
+const getJumpSound = createSound((oscillator, gain, audio) => {
     oscillator.frequency.setValueAtTime(Notes.G4, audio.currentTime);
     oscillator.frequency.linearRampToValueAtTime(Notes.G5, audio.currentTime + 0.25);
     gain.gain.setValueAtTime(0, audio.currentTime);
@@ -39,7 +58,7 @@ export const playJumpSound = createSound((oscillator, gain, audio) => {
     gain.gain.linearRampToValueAtTime(0, audio.currentTime + 0.25);
 });
 
-export const playCollectSound = createSound((oscillator, gain, audio) => {
+const getCollectSound = createSound((oscillator, gain, audio) => {
     oscillator.frequency.setValueAtTime(Notes.C5, audio.currentTime);
     oscillator.frequency.setValueAtTime(Notes.C7, audio.currentTime + 0.12);
     gain.gain.setValueAtTime(0, audio.currentTime);
@@ -48,3 +67,7 @@ export const playCollectSound = createSound((oscillator, gain, audio) => {
     gain.gain.linearRampToValueAtTime(1, audio.currentTime + 0.12);
     gain.gain.linearRampToValueAtTime(0, audio.currentTime + 0.5);
 });
+
+export const playJumpSound = () => getJumpSound()();
+
+export const playCollectSound = () => getCollectSound()();

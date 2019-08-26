@@ -1,10 +1,11 @@
 import * as transitions from './transitions';
 import { getKeys } from './keys';
+import * as game from './game';
+import * as sprites from './sprites';
 
-export const start = (callback) => {
+export const start = () => {
     const OPTIONS_Y = 100;
     const OPTIONS_HEIGHT = 20;
-    let selectedOption = 0;
     const START_GAME = 'START GAME';
     const options = [START_GAME];
     let previousUp = false;
@@ -13,42 +14,39 @@ export const start = (callback) => {
 
     const canvas = document.querySelector('canvas');
 
-    const mapCoordinates = callback => event => {
+    const mapCoordinates = (clientX, clientY) => {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        const x = (event.clientX - rect.left) * scaleX;
-        const y = (event.clientY - rect.top) * scaleY;
-        callback(x, y);
+        const x = (clientX - rect.left) * scaleX;
+        const y = (clientY - rect.top) * scaleY;
+        return { x, y };
     };
 
-    const mapOption = callback => mapCoordinates((x, y) => callback(Math.max(
-        0,
-        Math.min(
-            options.length - 1,
-            Math.floor((y - OPTIONS_Y) / OPTIONS_HEIGHT)
-        )
-    )));
+    const mapOption = ({ y }) => Math.floor((y - OPTIONS_Y) / OPTIONS_HEIGHT);
 
-    canvas.addEventListener('mousemove', mapOption(option => selectedOption = option));
-    canvas.addEventListener('click', mapOption(option => {
+    const handleOptionClick = async (option) => {
+        console.log(option);
+        console.log('clicked');
         if (options[option] === START_GAME) {
             finished = true;
-            transitions.fadeOut().then(callback);
+            canvas.removeEventListener('click', handleClick);
+            canvas.removeEventListener('touchend', handleTouchEnd);
+            await transitions.fadeOut();
+            await sprites.initialize();
+            game.start(await game.create());
         }
-    }));
+    };
+    const handleClick = event => handleOptionClick(mapOption(mapCoordinates(event.clientX, event.clientY)));
+    const handleTouchEnd = event => handleOptionClick(mapOption(mapCoordinates(event.changedTouches[0].clientX, event.changedTouches[0].clientY)));
+    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('touchend', handleTouchEnd);
 
     const loop = () => {
         if (finished) {
             return;
         }
 
-        if (!previousUp && getKeys().ArrowUp) {
-            selectedOption = (options.length + selectedOption - 1) % options.length;
-        }
-        if (!previousDown && getKeys().ArrowDown) {
-            selectedOption = (selectedOption + 1) % options.length;
-        }
         previousUp = getKeys().ArrowUp;
         previousDown = getKeys().ArrowDown;
 
@@ -60,21 +58,6 @@ export const start = (callback) => {
         for (let i = options.length - 1; i >=0; i--) {
             context.fillText(options[i], 100, OPTIONS_Y + OPTIONS_HEIGHT * i);
         }
-
-        context.fillStyle = 'blue';
-        context.textBaseline = 'top';
-        context.save();
-        context.translate(95, 105 + selectedOption * OPTIONS_HEIGHT);
-        context.beginPath();
-        context.moveTo(-15, -2);
-        context.lineTo(-7, -2);
-        context.lineTo(-7, -7);
-        context.lineTo(0, 0);
-        context.lineTo(-7, 7);
-        context.lineTo(-7, 2);
-        context.lineTo(-15, 2);
-        context.fill();
-        context.restore();
 
         requestAnimationFrame(loop);
     };
