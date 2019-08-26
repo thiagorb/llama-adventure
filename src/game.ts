@@ -18,6 +18,7 @@ import * as sprites from './sprites';
 import * as sound from './sound';
 import * as transitions from './transitions';
 import * as home from './home';
+import * as worker from './worker';
 import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
@@ -277,12 +278,10 @@ export const create = async (): Promise<Game> => {
         next: null,
     };
 
-    console.log(new Date(), 'before map create');
-    const levelMap = map.create(map.randomTiles());
-    console.log(new Date(), 'before map render');
+    const level = await worker.createLevel();
+    const levelMap = level.map;
     const renderedMap = map.render(levelMap);
-    console.log(new Date(), 'before find biggest');
-    const region = await simulation.findBiggestRegion(levelMap);
+    const region = level.region;
     console.log(new Date(), 'before randomize positions');
     randomizePositions(region, states.current.player.position, states.current.goal.position);
     const items: Array<Item> = randomizeItems(region);

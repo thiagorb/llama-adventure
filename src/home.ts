@@ -26,8 +26,6 @@ export const start = () => {
     const mapOption = ({ y }) => Math.floor((y - OPTIONS_Y) / OPTIONS_HEIGHT);
 
     const handleOptionClick = async (option) => {
-        console.log(option);
-        console.log('clicked');
         if (options[option] === START_GAME) {
             finished = true;
             canvas.removeEventListener('click', handleClick);

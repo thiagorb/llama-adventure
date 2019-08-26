@@ -4,19 +4,22 @@ import * as worker from './worker';
 import * as sound from './sound';
 
 if (typeof document !== 'undefined') {
+    worker.initialize();
     (async () => {
         sprites.initialize();
         worker.getSimulatedMovements();
         home.start();
     })();
 
+    const container = document.getElementById('container');
+
     const enableSound = () => {
-        console.log(sound.getAudio().resume());
-        document.getElementById('container').removeEventListener('click', enableSound);
-        document.getElementById('container').removeEventListener('touchend', enableSound);
+        sound.getAudio().resume();
+        container.removeEventListener('click', enableSound);
+        container.removeEventListener('touchend', enableSound);
     };
-    document.getElementById('container').addEventListener('click', enableSound);
-    document.getElementById('container').addEventListener('touchend', enableSound);
+    container.addEventListener('click', enableSound);
+    container.addEventListener('touchend', enableSound);
 } else {
     worker.work();
 }
