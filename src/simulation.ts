@@ -10,7 +10,6 @@ import * as state from './state';
 import * as player from './player';
 import * as map from './map';
 import * as matrix from './matrix';
-import { cachedInstance } from './utils';
 import * as worker from './worker';
 
 interface BoundingBox {
@@ -28,15 +27,6 @@ const getBoundingBox = (position: state.Vector2D): BoundingBox => {
         rowHeight: map.getRow(position.y + PLAYER_HEIGHT - METERS_PER_PIXEL) - rowTop,
         colLeft,
         colWidth: map.getCol(position.x + PLAYER_WIDTH - METERS_PER_PIXEL) - colLeft,
-    }
-};
-
-const getCellBoundingBox = (rowTop: number, colLeft: number): BoundingBox => {
-    return {
-        rowTop,
-        rowHeight: map.getRow(PLAYER_HEIGHT - METERS_PER_PIXEL),
-        colLeft,
-        colWidth: map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL),
     }
 };
 
@@ -65,7 +55,7 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
 
     let current: state.Player = state.createPlayer();
     let next: state.Player = state.createPlayer();
-    const MAX_SIMULATION_TIME = 5 * STEPS_PER_SECOND; //seconds
+    const MAX_SIMULATION_TIME = 4 * STEPS_PER_SECOND; //seconds
     const MAX_UP_DELAY = Math.sqrt(2 * TILE_SIZE / HORIZONTAL_ACCELERATION);
     const keys = {
         ArrowUp: false,
@@ -143,10 +133,10 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
     return movements;
 };
 
-const collides = (levelMap: map.Map, box: BoundingBox) => {
-    for (let row = 0; row <= box.rowHeight; row++) {
-        for (let col = 0; col <= box.colWidth; col++) {
-            if (map.isSolidCell(levelMap, box.rowTop + row, box.colLeft + col)) {
+const collides = (levelMap: map.Map, rowTop: number, rowHeight: number, colLeft: number, colWidth: number) => {
+    for (let i = 0; i <= rowHeight; i++) {
+        for (let j = 0; j <= colWidth; j++) {
+            if (map.isSolidCell(levelMap, rowTop + i, colLeft + j)) {
                 return true;
             }
         }
@@ -163,29 +153,49 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
         ...(await worker.getSimulatedMovements()),
     ];
 
+    const possibleNeighbors = new Map<string, { row: number, col: number, movements: Set<Array<BoundingBox>> }>();
+
+    const xxx = (position: BoundingBox) => `${position.rowTop},${position.colLeft}`;
+
+    for (let movement of possibleMovements) {
+        for (let position of movement) {
+            const key = xxx(position);
+            if (!possibleNeighbors.has(key)) {
+                possibleNeighbors.set(
+                    key,
+                    { row: position.rowTop, col: position.colLeft, movements: new Set() }
+                );
+            }
+            possibleNeighbors.get(key).movements.add(movement);
+        }
+    }
+
     let regionsCount = 0;
     const REGION_SOLID = -1;
     const REGION_EMPTY = -2;
     const REGION_UNKNOWN = 0;
+    const PLAYER_ROW_HEIGHT = map.getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
+    const PLAYER_COL_WIDTH = map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
     const regionsMap = matrix.create(
         Int16Array,
         map.getRows(levelMap),
         map.getCols(levelMap),
-        (row, col) => collides(levelMap, getCellBoundingBox(row, col)) ? REGION_SOLID : REGION_EMPTY
+        (row, col) => collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH) ? REGION_SOLID : REGION_EMPTY
     );
 
     for (let col = 0; col < matrix.getCols(regionsMap); col++) {
         let previousCollided = false;
         for (let row = matrix.getRows(regionsMap) - 1; row >= 0; row--) {
-            const collided = collides(levelMap, getCellBoundingBox(row, col));
+            const collided = collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH);
             if (!collided && previousCollided) {
                 matrix.set(regionsMap, row, col, REGION_UNKNOWN);
             }
             previousCollided = collided;
         }
     }
+    console.log(new Date(), 'mapping');
 
-    for (let currentRow = matrix.getRows(regionsMap) - 1; currentRow >= 0; currentRow--) {
+    for (let currentRow = 0; currentRow < matrix.getRows(regionsMap); currentRow++) {
         for (let col = 0; col < matrix.getCols(regionsMap); col++) {
             if (matrix.get(regionsMap, currentRow, col) === REGION_UNKNOWN) {
                 regionsCount++;
@@ -194,43 +204,49 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
                 matrix.set(regionsMap, currentRow, col, regionId);
                 while (boundary.length > 0) {
                     const current = boundary.pop();
-                    for (let possibleMovement of possibleMovements) {
-                        for (let position of possibleMovement) {
-                            const neighborRow = current.row + position.rowTop;
-                            const neighborCol = current.col + position.colLeft;
-                            if (!matrix.has(regionsMap, neighborRow, neighborCol)) {
-                                break;
-                            }
-                            const neighborValue = matrix.get(regionsMap, neighborRow, neighborCol);
-                            if (neighborValue === REGION_SOLID) {
-                                break;
-                            }
 
-                            const neighborBox = {
-                                rowTop: neighborRow,
-                                rowHeight: position.rowHeight,
-                                colLeft: neighborCol,
-                                colWidth: position.colWidth,
-                            };
-                            if (collides(levelMap, neighborBox)) {
-                                break;
-                            }
 
-                            if (neighborValue === REGION_EMPTY) {
-                                continue;
-                            }
+                    for (let possibleNeighbor of possibleNeighbors.values()) {
+                        const neighborRow = current.row + possibleNeighbor.row;
+                        const neighborCol = current.col + possibleNeighbor.col;
+                        if (!matrix.has(regionsMap, neighborRow, neighborCol)) {
+                            continue;
+                        }
+                        const neighborValue = matrix.get(regionsMap, neighborRow, neighborCol);
+                        if (neighborValue === REGION_SOLID) {
+                            continue;
+                        }
 
-                            if (neighborValue === regionId) {
-                                continue;
-                            }
+                        if (neighborValue === REGION_EMPTY) {
+                            continue;
+                        }
 
-                            if (neighborValue > 0) {
-                                matrix.replace(regionsMap, neighborValue, regionId);
-                                continue;
-                            }
+                        if (neighborValue === regionId) {
+                            continue;
+                        }
 
-                            matrix.set(regionsMap, neighborRow, neighborCol, regionId);
-                            boundary.push({row: neighborRow, col: neighborCol});
+                        movements:
+                        for (let possibleMovement of possibleNeighbor.movements.values()) {
+                            for (let position of possibleMovement) {
+                                const positionRow = current.row + position.rowTop;
+                                const positionCol = current.col + position.colLeft;
+                                if (collides(levelMap, positionRow, position.rowHeight, positionCol, position.colWidth)) {
+                                    break;
+                                }
+
+                                if (positionRow !== neighborRow || positionCol !== neighborCol) {
+                                    continue;
+                                }
+
+                                if (neighborValue > 0) {
+                                    matrix.replace(regionsMap, neighborValue, regionId);
+                                    break movements;
+                                }
+
+                                matrix.set(regionsMap, neighborRow, neighborCol, regionId);
+                                boundary.push({row: neighborRow, col: neighborCol});
+                                break movements;
+                            }
                         }
                     }
                 }
@@ -241,6 +257,7 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
     const regionsSize = {};
     let biggest = 0;
 
+    console.log(new Date(), 'calculating sizes');
     matrix.iterate(regionsMap, (row, col, value) => {
         if (value > 0) {
             regionsSize[value] = (regionsSize[value] || 0) + 1;
@@ -250,6 +267,7 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
         }
     });
 
+    console.log(new Date(), 'building biggest');
     const region = [];
     matrix.iterate(regionsMap, (row, col, value) => {
         if (value === biggest) {
