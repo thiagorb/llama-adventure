@@ -51,10 +51,13 @@ export const start = () => {
         const context = canvas.getContext('2d');
 
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.fillStyle = 'white';
-        context.fillText('LLAMA ADVENTURE', 100, 50);
+        context.textBaseline = 'top';
+        context.fillText('LLAMA ADVENTURE', 110, 50);
         for (let i = options.length - 1; i >=0; i--) {
-            context.fillText(options[i], 100, OPTIONS_Y + OPTIONS_HEIGHT * i);
+            context.fillStyle = '#444';
+            context.fillRect(100, OPTIONS_Y + OPTIONS_HEIGHT * i, 120, OPTIONS_HEIGHT);
+            context.fillStyle = 'white';
+            context.fillText(options[i], 110, OPTIONS_Y + 5 + OPTIONS_HEIGHT * i);
         }
 
         requestAnimationFrame(loop);

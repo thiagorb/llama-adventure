@@ -13,7 +13,6 @@ import * as physics from './physics';
 import * as map from './map';
 import * as state from './state';
 import * as matrix from './matrix';
-import * as simulation from './simulation';
 import * as sprites from './sprites';
 import * as sound from './sound';
 import * as transitions from './transitions';
