@@ -51,8 +51,8 @@ const render = (game: Game) => {
 
     player.render(context, game.states.current);
 
-    context.fillStyle = 'yellow';
-    context.fillRect(game.states.current.goal.position.x, game.states.current.goal.position.y, PLAYER_WIDTH, PLAYER_HEIGHT);
+    const house = sprites.get('house');
+    sprites.draw(context, house, game.states.current.goal.position.x, game.states.current.goal.position.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
 
     context.restore();
 

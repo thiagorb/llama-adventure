@@ -2,6 +2,7 @@ import llama from '../sprites/llama.png';
 import corn from '../sprites/corn.png';
 import pepper from '../sprites/pepper.png';
 import cactus from '../sprites/cactus.png';
+import house from '../sprites/house.png';
 import { cachedInstance } from './utils';
 
 export interface Sprite {
@@ -34,6 +35,12 @@ const spritesDefinitions = {
         url: cactus,
         width: 14,
         height: 24,
+        frames: 1
+    },
+    house: {
+        url: house,
+        width: 20,
+        height: 20,
         frames: 1
     }
 };
