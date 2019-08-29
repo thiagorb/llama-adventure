@@ -18,6 +18,7 @@ import * as sound from './sound';
 import * as transitions from './transitions';
 import * as home from './home';
 import * as worker from './worker';
+import * as level from './level';
 import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
@@ -44,7 +45,7 @@ const render = (game: Game) => {
 
     for (let item of game.items) {
         if (!item.collected) {
-            sprites.draw(context, item.sprite, item.position.x, item.position.y, item.width, item.height);
+            sprites.draw(context, sprites.get(item.sprite), item.position.x, item.position.y, item.width, item.height);
         }
     }
 
@@ -181,14 +182,6 @@ const findPosition = (levelMap: map.Map, regions: map.RegionsMap) => {
     throw new Error('Unable to find position');
 };
 
-export interface Item extends state.Object {
-    sprite: sprites.Sprite;
-    collected: boolean;
-    width: number;
-    height: number;
-    score: number;
-}
-
 export interface Game {
     states: state.States;
     stepsSinceBeginning: number;
@@ -198,96 +191,24 @@ export interface Game {
     sps: number;
     score: number;
     levelMap: map.Map;
-    region: Array<map.Cell>
     renderedMap: CanvasImageSource;
     secondInterval: number;
     finished: boolean;
-    items: Array<Item>;
+    items: Array<level.Item>;
 }
 
-const randomizePositions = (region: Array<map.Cell>, playerPosition: state.Vector2D, goalPosition: state.Vector2D) => {
-    const cols = region.map(r => r.col).sort();
-    const medianCol = cols[Math.ceil(cols.length / 2)];
-    const leftRegion = region.filter(({ col }) => col < medianCol);
-    const rightRegion = region.filter(({ col }) => col >= medianCol);
-    const playerLeft = Math.random() < 0.5;
-    const playerRegion = playerLeft ? leftRegion : rightRegion;
-    const goalRegion = playerLeft ? rightRegion: leftRegion;
-
-    let best = null;
-    for (let attempt = 0; attempt < 10; attempt++) {
-        const player = playerRegion[Math.floor(Math.random() * playerRegion.length)];
-        const goal = goalRegion[Math.floor(Math.random() * goalRegion.length)];
-        const dy = player.row - goal.row;
-        const dx = player.col - goal.col;
-        const distance2 = dy * dy + dx * dx;
-        console.log(Math.sqrt(distance2));
-        if (best === null || distance2 > best.distance2) {
-            best = { player, goal, distance2 };
-        }
-    }
-
-    playerPosition.x = best.player.col * TILE_SIZE;
-    playerPosition.y = best.player.row * TILE_SIZE;
-    goalPosition.x = best.goal.col * TILE_SIZE;
-    goalPosition.y = best.goal.row * TILE_SIZE;
-};
-
-const randomizeItems = (region: Array<map.Cell>): Array<Item> => {
-    const items: Array<Item> = [];
-    const ITEMS_COUNT = 50;
-    const step = region.length / ITEMS_COUNT;
-    const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number }>  = [
-        {
-            sprite: 'corn',
-            score: 10,
-        },
-        {
-            sprite: 'pepper',
-            score: 20,
-        },
-        {
-            sprite: 'cactus',
-            score: 50,
-        },
-    ];
-
-    for (let i = 0; i < ITEMS_COUNT; i++) {
-        const cell = region[Math.floor(i * step)];
-        const itemType = itemsPrototypes[i % 3];
-        const sprite = sprites.get(itemType.sprite);
-        items.push({
-            position: {
-                x: cell.col * TILE_SIZE,
-                y: cell.row * TILE_SIZE
-            },
-            score: itemType.score,
-            sprite,
-            collected: false,
-            width: sprite.width * METERS_PER_PIXEL,
-            height: sprite.height * METERS_PER_PIXEL,
-        });
-    }
-    return items.sort((a, b) => a.position.x - b.position.x);
-};
-
 export const create = async (): Promise<Game> => {
-    const states: state.States = {
-        current: state.create(),
-        next: null,
-    };
-
+    const current = state.create();
     const level = await worker.createLevel();
+    current.player.position = level.player;
+    current.goal.position = level.goal;
     const levelMap = level.map;
-    const renderedMap = map.render(levelMap);
-    const region = level.region;
-    console.log(new Date(), 'before randomize positions');
-    randomizePositions(region, states.current.player.position, states.current.goal.position);
-    const items: Array<Item> = randomizeItems(region);
-    states.next = deepCopy(states.current);
 
     return {
-        states,
+        states: {
+            current,
+            next: deepCopy(current)
+        },
         stepsSinceBeginning: 0,
         stepCount: 0,
         frameCount: 0,
@@ -295,15 +216,15 @@ export const create = async (): Promise<Game> => {
         sps: 0,
         score: 0,
         levelMap,
-        region,
-        renderedMap,
+        renderedMap: map.render(levelMap),
         secondInterval: null,
         finished: false,
-        items,
+        items: level.items,
     };
 };
 
 export const start = (game: Game) => {
+    console.log(game);
     game.secondInterval = setInterval(() => {
         game.fps = game.frameCount;
         game.sps = game.stepCount;

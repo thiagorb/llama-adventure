@@ -1,7 +1,6 @@
 import * as simulation from './simulation';
-import * as game from './game';
+import * as level from './level';
 import { cachedInstance } from './utils';
-import * as map from './map';
 
 const enum JobType {
     SimulateMovements,
@@ -41,18 +40,12 @@ const start = (job: JobType): Promise<any> => {
 };
 
 export const getSimulatedMovements = () => start(JobType.SimulateMovements);
-export const createLevel = () => start(JobType.CreateLevel);
+export const createLevel = (): Promise<level.Level> => start(JobType.CreateLevel);
 
 const handleJob = (() => {
     const handlers = new Map();
     handlers.set(JobType.SimulateMovements, cachedInstance(() => simulation.simulateMovements()));
-    handlers.set(JobType.CreateLevel, async () => {
-        console.log(new Date(), 'before map create');
-        const levelMap = map.create(map.randomTiles());
-        console.log(new Date(), 'before find biggest');
-        const region = await simulation.findBiggestRegion(levelMap);
-        return { map: levelMap, region };
-    });
+    handlers.set(JobType.CreateLevel, level.create);
 
     return ({ job }) => handlers.get(job)();
 })();

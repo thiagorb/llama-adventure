@@ -144,7 +144,7 @@ const collides = (levelMap: map.Map, rowTop: number, rowHeight: number, colLeft:
     return false;
 };
 
-export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Cell>> => {
+export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.Cell>>> => {
     const possibleMovements: Array<Array<BoundingBox>> = [
         [getBoundingBox({x: TILE_SIZE, y: 0})],
         [getBoundingBox({x: -TILE_SIZE, y: 0})],
@@ -155,11 +155,11 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
 
     const possibleNeighbors = new Map<string, { row: number, col: number, movements: Set<Array<BoundingBox>> }>();
 
-    const xxx = (position: BoundingBox) => `${position.rowTop},${position.colLeft}`;
+    const getPositionKey = (position: BoundingBox) => `${position.rowTop},${position.colLeft}`;
 
     for (let movement of possibleMovements) {
         for (let position of movement) {
-            const key = xxx(position);
+            const key = getPositionKey(position);
             if (!possibleNeighbors.has(key)) {
                 possibleNeighbors.set(
                     key,
@@ -170,62 +170,64 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
         }
     }
 
-    let regionsCount = 0;
-    const REGION_SOLID = -1;
-    const REGION_EMPTY = -2;
-    const REGION_UNKNOWN = 0;
+    let surfacesCount = 0;
+    const MAP_SOLID = -1;
+    const MAP_EMPTY = -2;
+    const SURFACE_UNKNOWN = 0;
     const PLAYER_ROW_HEIGHT = map.getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
     const PLAYER_COL_WIDTH = map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
-    const regionsMap = matrix.create(
+    const surfacesMap = matrix.create(
         Int16Array,
         map.getRows(levelMap),
         map.getCols(levelMap),
-        (row, col) => collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH) ? REGION_SOLID : REGION_EMPTY
+        (row, col) => collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH) ? MAP_SOLID : MAP_EMPTY
     );
 
-    for (let col = 0; col < matrix.getCols(regionsMap); col++) {
+    for (let col = 0; col < matrix.getCols(surfacesMap); col++) {
         let previousCollided = false;
-        for (let row = matrix.getRows(regionsMap) - 1; row >= 0; row--) {
+        for (let row = matrix.getRows(surfacesMap) - 1; row >= 0; row--) {
             const collided = collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH);
             if (!collided && previousCollided) {
-                matrix.set(regionsMap, row, col, REGION_UNKNOWN);
+                matrix.set(surfacesMap, row, col, SURFACE_UNKNOWN);
             }
             previousCollided = collided;
         }
     }
     console.log(new Date(), 'mapping');
 
-    for (let currentRow = 0; currentRow < matrix.getRows(regionsMap); currentRow++) {
-        for (let col = 0; col < matrix.getCols(regionsMap); col++) {
-            if (matrix.get(regionsMap, currentRow, col) === REGION_UNKNOWN) {
-                regionsCount++;
-                const regionId = regionsCount;
-                const boundary = [{row: currentRow, col}];
-                matrix.set(regionsMap, currentRow, col, regionId);
-                while (boundary.length > 0) {
-                    const current = boundary.pop();
+    for (let currentRow = 0; currentRow < matrix.getRows(surfacesMap); currentRow++) {
+        for (let col = 0; col < matrix.getCols(surfacesMap); col++) {
+            if (matrix.get(surfacesMap, currentRow, col) !== SURFACE_UNKNOWN) {
+                continue;
+            }
 
+            surfacesCount++;
+            const surfaceId = surfacesCount;
+            const boundary = [{row: currentRow, col}];
+            matrix.set(surfacesMap, currentRow, col, surfaceId);
+            while (boundary.length > 0) {
+                const current = boundary.pop();
 
-                    for (let possibleNeighbor of possibleNeighbors.values()) {
-                        const neighborRow = current.row + possibleNeighbor.row;
-                        const neighborCol = current.col + possibleNeighbor.col;
-                        if (!matrix.has(regionsMap, neighborRow, neighborCol)) {
-                            continue;
-                        }
-                        const neighborValue = matrix.get(regionsMap, neighborRow, neighborCol);
-                        if (neighborValue === REGION_SOLID) {
-                            continue;
-                        }
+                for (let possibleNeighbor of possibleNeighbors.values()) {
+                    const neighborRow = current.row + possibleNeighbor.row;
+                    const neighborCol = current.col + possibleNeighbor.col;
+                    if (!matrix.has(surfacesMap, neighborRow, neighborCol)) {
+                        continue;
+                    }
+                    const neighborValue = matrix.get(surfacesMap, neighborRow, neighborCol);
+                    if (neighborValue === MAP_SOLID) {
+                        continue;
+                    }
 
-                        if (neighborValue === REGION_EMPTY) {
-                            continue;
-                        }
+                    if (neighborValue === MAP_EMPTY) {
+                        continue;
+                    }
 
-                        if (neighborValue === regionId) {
-                            continue;
-                        }
+                    if (neighborValue === surfaceId) {
+                        continue;
+                    }
 
-                        movements:
+                    movements:
                         for (let possibleMovement of possibleNeighbor.movements.values()) {
                             for (let position of possibleMovement) {
                                 const positionRow = current.row + position.rowTop;
@@ -239,40 +241,34 @@ export const findBiggestRegion = async (levelMap: map.Map): Promise<Array<map.Ce
                                 }
 
                                 if (neighborValue > 0) {
-                                    matrix.replace(regionsMap, neighborValue, regionId);
+                                    matrix.replace(surfacesMap, neighborValue, surfaceId);
                                     break movements;
                                 }
 
-                                matrix.set(regionsMap, neighborRow, neighborCol, regionId);
+                                matrix.set(surfacesMap, neighborRow, neighborCol, surfaceId);
                                 boundary.push({row: neighborRow, col: neighborCol});
                                 break movements;
                             }
                         }
-                    }
                 }
             }
         }
     }
 
-    const regionsSize = {};
-    let biggest = 0;
+    const surfaces = new Map<number, Array<map.Cell>>();
 
     console.log(new Date(), 'calculating sizes');
-    matrix.iterate(regionsMap, (row, col, value) => {
-        if (value > 0) {
-            regionsSize[value] = (regionsSize[value] || 0) + 1;
-            if (biggest === 0 || regionsSize[value] > regionsSize[biggest]) {
-                biggest = value;
-            }
+    matrix.iterate(surfacesMap, (row, col, value) => {
+        if (value <= 0) {
+            return;
         }
+
+        if (!surfaces.has(value)) {
+            surfaces.set(value, []);
+        }
+
+        surfaces.get(value).push({ row, col });
     });
 
-    console.log(new Date(), 'building biggest');
-    const region = [];
-    matrix.iterate(regionsMap, (row, col, value) => {
-        if (value === biggest) {
-            region.push({ row, col });
-        }
-    });
-    return region;
+    return [...surfaces.values()].sort((s1, s2) => s1.length - s2.length);
 };
