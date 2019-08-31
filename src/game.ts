@@ -33,8 +33,9 @@ export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
     context.drawImage(game.renderedMap, 0, 0);
     context.restore();
 
-    for (let item of game.items) {
-        if (!item.collected) {
+    for (let i = game.collectedItems.length - 1; i >= 0; i--) {
+        if (!game.collectedItems[i]) {
+            const item = game.level.items[i];
             sprites.draw(context, sprites.get(item.sprite), item.position.x, item.position.y, item.width, item.height);
         }
     }
@@ -88,7 +89,7 @@ const reachedGoal = (state: state.State) =>
     distance2(state.player.position, state.goal.position) < PLAYER_HEIGHT * PLAYER_HEIGHT;
 
 const checkItemsCollection = (game: Game) => {
-    const items = game.items;
+    const items = game.level.items;
     const playerPosition = game.states.current.player.position;
     const minX = playerPosition.x - 2 * PLAYER_WIDTH;
     const maxX = playerPosition.x + 2 * PLAYER_WIDTH;
@@ -109,7 +110,7 @@ const checkItemsCollection = (game: Game) => {
 
     for (let i = minStartIndex; i >= 0 && i < items.length && items[i].position.x >= minX; i--) {
         const item = items[i];
-        if (item.collected) {
+        if (game.collectedItems[i]) {
             continue;
         }
 
@@ -130,7 +131,7 @@ const checkItemsCollection = (game: Game) => {
         }
 
         sound.playCollectSound();
-        item.collected = true;
+        game.collectedItems[i] = true;
         game.score += item.score;
     }
 };
@@ -139,7 +140,7 @@ export const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
         if (!game.finished) {
             checkItemsCollection(game);
-            physics.step(game.map, game.states);
+            physics.step(game.level.map, game.states);
             if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
                 sound.playJumpSound();
             }
@@ -175,12 +176,12 @@ const loopFactory = (game: Game) => {
 };
 
 export interface Game {
-    states: state.States;
+    readonly states: state.States;
+    readonly level: level.Level;
+    readonly renderedMap: CanvasImageSource;
+    readonly collectedItems: Array<boolean>;
     score: number;
-    map: map.Map;
-    renderedMap: CanvasImageSource;
     finished: boolean;
-    items: Array<level.Item>;
 }
 
 export const create = async (): Promise<Game> => {
@@ -194,11 +195,11 @@ export const create = async (): Promise<Game> => {
             current,
             next: deepCopy(current)
         },
-        score: 0,
-        map: level.map,
+        level,
         renderedMap: map.render(level.map),
+        collectedItems: level.items.map(() => false),
+        score: 0,
         finished: false,
-        items: level.items,
     };
 };
 

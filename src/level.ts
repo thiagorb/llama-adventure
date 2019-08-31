@@ -6,18 +6,19 @@ import * as simulation from './simulation';
 import * as state from './state';
 
 export interface Level {
-    map: map.Map;
-    items: Array<Item>;
-    player: state.Vector2D;
-    goal: state.Vector2D;
+    readonly map: map.Map;
+    readonly items: Array<Item>;
+    readonly player: state.Vector2D;
+    readonly goal: state.Vector2D;
+    readonly surfaces: Array<Array<map.Cell>>;
+    readonly regions: map.RegionsMap;
 }
 
 export interface Item extends state.Object {
-    sprite: sprites.SpriteCode;
-    collected: boolean;
-    width: number;
-    height: number;
-    score: number;
+    readonly sprite: sprites.SpriteCode;
+    readonly width: number;
+    readonly height: number;
+    readonly score: number;
 }
 
 const randomizePositions = (region: Array<map.Cell>) => {
@@ -84,7 +85,6 @@ const randomizeItems = (region: Array<map.Cell>): Array<Item> => {
             },
             score: itemType.score,
             sprite: itemType.sprite,
-            collected: false,
             width: sprite.width * METERS_PER_PIXEL,
             height: sprite.height * METERS_PER_PIXEL,
         });
@@ -110,6 +110,8 @@ export const create = async (): Promise<Level> => {
     return {
         map: levelMap,
         items: randomizeItems(surface),
-        ...randomizePositions(surface)
+        ...randomizePositions(surface),
+        surfaces,
+        regions,
     };
 };
