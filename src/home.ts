@@ -1,6 +1,7 @@
 import * as transitions from './transitions';
 import { getKeys } from './keys';
 import * as game from './game';
+import * as debug from './debug';
 import * as sprites from './sprites';
 
 export const start = () => {
@@ -32,7 +33,11 @@ export const start = () => {
             canvas.removeEventListener('touchend', handleTouchEnd);
             await transitions.fadeOut();
             await sprites.initialize();
-            game.start(await game.create());
+            if (process.env.NODE_ENV === 'production') {
+                game.start(await game.create());
+            } else {
+                debug.start(await game.create());
+            }
         }
     };
     const handleClick = event => handleOptionClick(mapOption(mapCoordinates(event.clientX, event.clientY)));

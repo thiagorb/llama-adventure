@@ -1,12 +1,11 @@
 import {
-    METERS_PER_PIXEL,
+    METERS_PER_PIXEL, MILLISECONDS_PER_STEP,
     PIXELS_PER_METER,
     PLAYER_HEIGHT,
     PLAYER_WIDTH,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
-    STEPS_PER_SECOND,
-    TILE_SIZE
+    STEPS_PER_SECOND
 } from './consts';
 import * as player from './player';
 import * as physics from './physics';
@@ -19,8 +18,6 @@ import * as home from './home';
 import * as worker from './worker';
 import * as level from './level';
 import { deepCopy } from './utils';
-
-const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
 
 interface RenderTarget {
     canvas: {
@@ -46,33 +43,38 @@ export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
 
     const house = sprites.get('house');
     sprites.draw(context, house, game.states.current.goal.position.x, game.states.current.goal.position.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
-
-    context.restore();
 };
 
-const render = (game: Game, target: RenderTarget) => {
+export const centerScreen = (context: CanvasRenderingContext2D) => {
+    context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+};
+
+export const scaleWorld = (context: CanvasRenderingContext2D) => {
+    context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
+};
+
+export const centerPlayer = (game: Game, context: CanvasRenderingContext2D) => {
+    context.translate(
+        -game.states.current.player.position.x - PLAYER_WIDTH / 2,
+        -game.states.current.player.position.y - PLAYER_HEIGHT / 2
+    );
+};
+
+export const render = (game: Game, target: RenderTarget) => {
     const context = target.context;
 
     context.clearRect(0, 0, target.canvas.width, target.canvas.height);
 
     context.save();
-    context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-    context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
-    context.translate(
-        -game.states.current.player.position.x - PLAYER_WIDTH / 2,
-        -game.states.current.player.position.y - PLAYER_HEIGHT / 2
-    );
-
+    centerScreen(context);
+    scaleWorld(context);
+    centerPlayer(game, context);
     renderWorld(game, context);
+    context.restore();
 
     context.font = '10px sans-serif';
     context.fillStyle = 'white';
     context.fillText(`SCORE: ${game.score}`, 5, 10);
-
-    if (process.env.NODE_ENV !== 'production') {
-        context.fillText(game.sps.toString(), 5, 20);
-        context.fillText(game.fps.toString(), 5, 30);
-    }
 };
 
 const distance2 = (p1: state.Vector2D, p2: state.Vector2D) => {
@@ -133,9 +135,8 @@ const checkItemsCollection = (game: Game) => {
     }
 };
 
-const step = (game: Game, steps: number) => {
+export const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
-        game.stepCount++;
         if (!game.finished) {
             checkItemsCollection(game);
             physics.step(game.levelMap, game.states);
@@ -158,13 +159,13 @@ const loopFactory = (game: Game) => {
     const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
     const renderTarget = { canvas, context };
+    let stepsSinceBeginning = 0;
 
     const loop = (timestamp: number) => {
         const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
-        step(game, Math.min(STEPS_PER_SECOND, currentStep - game.stepsSinceBeginning));
-        game.stepsSinceBeginning = currentStep;
+        step(game, Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning));
+        stepsSinceBeginning = currentStep;
         render(game, renderTarget);
-        game.frameCount++;
         if (!game.finished) {
             window.requestAnimationFrame(loop);
         }
@@ -175,15 +176,9 @@ const loopFactory = (game: Game) => {
 
 export interface Game {
     states: state.States;
-    stepsSinceBeginning: number;
-    stepCount: number;
-    frameCount: number;
-    fps: number;
-    sps: number;
     score: number;
     levelMap: map.Map;
     renderedMap: CanvasImageSource;
-    secondInterval: number;
     finished: boolean;
     items: Array<level.Item>;
 }
@@ -200,29 +195,15 @@ export const create = async (): Promise<Game> => {
             current,
             next: deepCopy(current)
         },
-        stepsSinceBeginning: 0,
-        stepCount: 0,
-        frameCount: 0,
-        fps: 0,
-        sps: 0,
         score: 0,
         levelMap,
         renderedMap: map.render(levelMap),
-        secondInterval: null,
         finished: false,
         items: level.items,
     };
 };
 
 export const start = (game: Game) => {
-    console.log(game);
-    game.secondInterval = setInterval(() => {
-        game.fps = game.frameCount;
-        game.sps = game.stepCount;
-        game.stepCount = 0;
-        game.frameCount = 0;
-    }, 1000);
-
     const loop = loopFactory(game);
     loop(0);
 };
