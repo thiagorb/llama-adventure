@@ -23,21 +23,15 @@ import { deepCopy } from './utils';
 
 const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
 
-const render = (game: Game) => {
-    const canvas = document.querySelector('canvas');
-    const context = canvas.getContext('2d');
-    context.imageSmoothingEnabled = false;
+interface RenderTarget {
+    canvas: {
+        width: number,
+        height: number,
+    },
+    context: CanvasRenderingContext2D;
+}
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    context.save();
-    context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-    context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
-    context.translate(
-        -game.states.current.player.position.x - PLAYER_WIDTH / 2,
-        -game.states.current.player.position.y - PLAYER_HEIGHT / 2
-    );
-
+export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
     context.save();
     context.scale(1 / PIXELS_PER_METER, 1 / PIXELS_PER_METER);
     context.drawImage(game.renderedMap, 0, 0);
@@ -55,6 +49,22 @@ const render = (game: Game) => {
     sprites.draw(context, house, game.states.current.goal.position.x, game.states.current.goal.position.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
 
     context.restore();
+};
+
+const render = (game: Game, target: RenderTarget) => {
+    const context = target.context;
+
+    context.clearRect(0, 0, target.canvas.width, target.canvas.height);
+
+    context.save();
+    context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+    context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
+    context.translate(
+        -game.states.current.player.position.x - PLAYER_WIDTH / 2,
+        -game.states.current.player.position.y - PLAYER_HEIGHT / 2
+    );
+
+    renderWorld(game, context);
 
     context.font = '10px sans-serif';
     context.fillStyle = 'white';
@@ -145,11 +155,16 @@ const step = (game: Game, steps: number) => {
 };
 
 const loopFactory = (game: Game) => {
+    const canvas = document.querySelector('canvas');
+    const context = canvas.getContext('2d');
+    context.imageSmoothingEnabled = false;
+    const renderTarget = { canvas, context };
+
     const loop = (timestamp: number) => {
         const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
         step(game, currentStep - game.stepsSinceBeginning);
         game.stepsSinceBeginning = currentStep;
-        render(game);
+        render(game, renderTarget);
         game.frameCount++;
         if (!game.finished) {
             window.requestAnimationFrame(loop);
