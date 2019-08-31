@@ -133,17 +133,6 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
     return movements;
 };
 
-const collides = (levelMap: map.Map, rowTop: number, rowHeight: number, colLeft: number, colWidth: number) => {
-    for (let i = 0; i <= rowHeight; i++) {
-        for (let j = 0; j <= colWidth; j++) {
-            if (map.isSolidCell(levelMap, rowTop + i, colLeft + j)) {
-                return true;
-            }
-        }
-    }
-    return false;
-};
-
 export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.Cell>>> => {
     const possibleMovements: Array<Array<BoundingBox>> = [
         [getBoundingBox({x: TILE_SIZE, y: 0})],
@@ -174,19 +163,17 @@ export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.C
     const MAP_SOLID = -1;
     const MAP_EMPTY = -2;
     const SURFACE_UNKNOWN = 0;
-    const PLAYER_ROW_HEIGHT = map.getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
-    const PLAYER_COL_WIDTH = map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
     const surfacesMap = matrix.create(
         Int16Array,
         map.getRows(levelMap),
         map.getCols(levelMap),
-        (row, col) => collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH) ? MAP_SOLID : MAP_EMPTY
+        (row, col) => map.collides(levelMap, row, col) ? MAP_SOLID : MAP_EMPTY
     );
 
     for (let col = 0; col < matrix.getCols(surfacesMap); col++) {
         let previousCollided = false;
         for (let row = matrix.getRows(surfacesMap) - 1; row >= 0; row--) {
-            const collided = collides(levelMap, row, PLAYER_ROW_HEIGHT, col, PLAYER_COL_WIDTH);
+            const collided = map.collides(levelMap, row, col);
             if (!collided && previousCollided) {
                 matrix.set(surfacesMap, row, col, SURFACE_UNKNOWN);
             }
@@ -232,7 +219,7 @@ export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.C
                             for (let position of possibleMovement) {
                                 const positionRow = current.row + position.rowTop;
                                 const positionCol = current.col + position.colLeft;
-                                if (collides(levelMap, positionRow, position.rowHeight, positionCol, position.colWidth)) {
+                                if (map.collides(levelMap, positionRow, positionCol, position.rowHeight, position.colWidth)) {
                                     break;
                                 }
 

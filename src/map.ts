@@ -24,6 +24,27 @@ export const getRows = (map: Map) => matrix.getRows(map.tiles);
 export const getCol = (x: number) => Math.floor(x / TILE_SIZE);
 export const getRow = (y: number) => Math.floor(y / TILE_SIZE);
 
+
+const PLAYER_ROW_HEIGHT = getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
+const PLAYER_COL_WIDTH = getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
+
+export const collides = (
+    levelMap: Map,
+    rowTop: number,
+    colLeft: number,
+    rowHeight: number = PLAYER_ROW_HEIGHT,
+    colWidth: number = PLAYER_COL_WIDTH
+) => {
+    for (let i = 0; i <= rowHeight; i++) {
+        for (let j = 0; j <= colWidth; j++) {
+            if (isSolidCell(levelMap, rowTop + i, colLeft + j)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
 export const getCellValue = (map: Map, row: number, col: number) =>
     matrix.get(map.tiles, row, col);
 
@@ -126,7 +147,7 @@ export const calculateRegions = (map: Map): RegionsMap => {
         Int8Array,
         getRows(map),
         getCols(map),
-        (row, col) => isSolidCell(map, row, col) ? -1 : 0
+        (row, col) => collides(map, row, col) ? -1 : 0
     );
 
     matrix.iterate(regionsMap, (row, col) => {
