@@ -33,18 +33,12 @@ import { deepCopy } from './utils';
     gameState.goal.position = { x: 50, y: 50 };
 
     const g: game.Game = {
-        canvas: document.querySelector('canvas'),
         states: { current: gameState, next: deepCopy(gameState) },
-        stepsSinceBeginning: 0,
-        stepCount: 0,
-        frameCount: 0,
-        fps: 0,
-        sps: 0,
-        levelMap,
+        map: levelMap,
         renderedMap,
-        secondInterval: null,
         finished: false,
-        fadingOut: 0,
+        score: 0,
+        items: [],
     };
 
     game.start(g);

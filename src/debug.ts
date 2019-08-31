@@ -5,7 +5,6 @@ export const start = (debugGame) => {
     const canvas = document.querySelector('canvas');
     const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
-    const renderTarget = { canvas, context };
     let debug;
 
     if (window['debug']) {

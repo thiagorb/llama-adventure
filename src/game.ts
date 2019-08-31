@@ -107,7 +107,7 @@ const checkItemsCollection = (game: Game) => {
         }
     }
 
-    for (let i = minStartIndex; i >= 0 && items[i].position.x >= minX; i--) {
+    for (let i = minStartIndex; i >= 0 && i < items.length && items[i].position.x >= minX; i--) {
         const item = items[i];
         if (item.collected) {
             continue;
@@ -139,7 +139,7 @@ export const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
         if (!game.finished) {
             checkItemsCollection(game);
-            physics.step(game.levelMap, game.states);
+            physics.step(game.map, game.states);
             if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
                 sound.playJumpSound();
             }
@@ -177,7 +177,7 @@ const loopFactory = (game: Game) => {
 export interface Game {
     states: state.States;
     score: number;
-    levelMap: map.Map;
+    map: map.Map;
     renderedMap: CanvasImageSource;
     finished: boolean;
     items: Array<level.Item>;
@@ -188,7 +188,6 @@ export const create = async (): Promise<Game> => {
     const level = await worker.createLevel();
     current.player.position = level.player;
     current.goal.position = level.goal;
-    const levelMap = level.map;
 
     return {
         states: {
@@ -196,8 +195,8 @@ export const create = async (): Promise<Game> => {
             next: deepCopy(current)
         },
         score: 0,
-        levelMap,
-        renderedMap: map.render(levelMap),
+        map: level.map,
+        renderedMap: map.render(level.map),
         finished: false,
         items: level.items,
     };
