@@ -161,7 +161,7 @@ const loopFactory = (game: Game) => {
 
     const loop = (timestamp: number) => {
         const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
-        step(game, currentStep - game.stepsSinceBeginning);
+        step(game, Math.min(STEPS_PER_SECOND, currentStep - game.stepsSinceBeginning));
         game.stepsSinceBeginning = currentStep;
         render(game, renderTarget);
         game.frameCount++;
