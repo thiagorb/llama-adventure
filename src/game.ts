@@ -12,7 +12,6 @@ import * as player from './player';
 import * as physics from './physics';
 import * as map from './map';
 import * as state from './state';
-import * as matrix from './matrix';
 import * as sprites from './sprites';
 import * as sound from './sound';
 import * as transitions from './transitions';
@@ -172,29 +171,6 @@ const loopFactory = (game: Game) => {
     };
 
     return loop;
-};
-
-const findPosition = (levelMap: map.Map, regions: map.RegionsMap) => {
-    for (let i = 0; i < 100; i++) {
-        const row = Math.floor(Math.random() * map.getRows(levelMap));
-        const col = Math.floor(Math.random() * map.getCols(levelMap));
-        if (matrix.get(regions.map, row, col) !== regions.biggest) {
-            continue;
-        }
-        const x = col * TILE_SIZE;
-        const y = row * TILE_SIZE;
-
-        if (map.collidesWithHorizontalSegment(levelMap, y, x, x + PLAYER_WIDTH)) {
-            continue;
-        }
-
-        if (map.collidesWithVerticalSegment(levelMap, x, y, y + PLAYER_HEIGHT)) {
-            continue;
-        }
-
-        return { x, y };
-    }
-    throw new Error('Unable to find position');
 };
 
 export interface Game {
