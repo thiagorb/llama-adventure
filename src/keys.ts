@@ -16,27 +16,28 @@ export const getKeys = cachedInstance(() => {
     };
 
     const keyMap = {
-        ArrowUp: 'ArrowUp',
-        ArrowLeft: 'ArrowLeft',
-        ArrowDown: 'ArrowDown',
-        ArrowRight: 'ArrowRight',
+        arrowup: 'ArrowUp',
+        arrowleft: 'ArrowLeft',
+        arrowdown: 'ArrowDown',
+        arrowright: 'ArrowRight',
         w: 'ArrowUp',
         a: 'ArrowLeft',
         s: 'ArrowDown',
         d: 'ArrowRight',
     };
 
-    document.addEventListener('keydown', event => {
-        if (keyMap[event.key]) {
-            state[keyMap[event.key]] = true;
-        }
-    });
+    const flagKey = key => state[key] = true;
+    const unflagKey = key => state[key] = false;
 
-    document.addEventListener('keyup', event => {
-        if (keyMap[event.key]) {
-            state[keyMap[event.key]] = false;
+    const filterKey = callback => event => {
+        const key = keyMap[event.key.toLowerCase()];
+        if (key) {
+            callback(key);
         }
-    });
+    };
+
+    document.addEventListener('keydown', filterKey(flagKey));
+    document.addEventListener('keyup', filterKey(unflagKey));
 
     const isTouchDevice = () => {
         try {
@@ -50,19 +51,16 @@ export const getKeys = cachedInstance(() => {
     if (isTouchDevice()) {
         document.body.classList.add('touch');
 
-        document.addEventListener('touchstart', event => {
+        const filterTouch = callback => event => {
             event.preventDefault();
-            if ((event.target as HTMLDivElement).getAttribute('data-touch-key') in state) {
-                state[(event.target as HTMLDivElement).getAttribute('data-touch-key')] = true;
+            const key = (event.target as HTMLDivElement).getAttribute('data-touch-key');
+            if (key in state) {
+                callback(key);
             }
-        });
+        };
 
-        document.addEventListener('touchend', event => {
-            event.preventDefault();
-            if ((event.target as HTMLDivElement).getAttribute('data-touch-key') in state) {
-                state[(event.target as HTMLDivElement).getAttribute('data-touch-key')] = false;
-            }
-        });
+        document.addEventListener('touchstart', filterTouch(flagKey));
+        document.addEventListener('touchend', filterTouch(unflagKey));
     }
 
     return state;
