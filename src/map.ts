@@ -5,11 +5,6 @@ export interface Map {
     tiles: matrix.Matrix<Int8Array>;
 }
 
-export interface RegionsMap {
-    map: matrix.Matrix<Int8Array>;
-    biggest: number;
-}
-
 export interface Cell {
     row: number;
     col: number;
@@ -139,49 +134,6 @@ export const isSolidPosition = (map: Map, x, y) => isSolidValue(getPositionValue
 export const isSolidCell = (map: Map, row, col) =>
     !matrix.has(map.tiles, row, col) ||
     isSolidValue(getCellValue(map, row, col));
-
-export const calculateRegions = (map: Map): RegionsMap => {
-    let regions = 0;
-    const regionsAreas = {};
-    const regionsMap = matrix.create(
-        Int8Array,
-        getRows(map),
-        getCols(map),
-        (row, col) => collides(map, row, col) ? -1 : 0
-    );
-
-    matrix.iterate(regionsMap, (row, col) => {
-        if (matrix.get(regionsMap, row, col)) {
-            return;
-        }
-
-        regions++;
-        const regionId = regions;
-        let regionArea = 1;
-        const boundary = [{row, col}];
-        matrix.set(regionsMap, row, col, regionId);
-        while (boundary.length > 0) {
-            const current = boundary.pop();
-            for (let i of [-1, 0, 1]) {
-                for (let j of i ? [0] : [-1, 1]) {
-                    const neighborRow = current.row + i;
-                    const neighborCol = current.col + j;
-                    if (matrix.has(regionsMap, neighborRow, neighborCol) && !matrix.get(regionsMap, neighborRow, neighborCol)) {
-                        boundary.push({ row: neighborRow, col: neighborCol });
-                        matrix.set(regionsMap, neighborRow, neighborCol, regionId);
-                        regionArea++;
-                    }
-                }
-            }
-        }
-        regionsAreas[regionId] = regionArea;
-    });
-
-    return {
-        map: regionsMap,
-        biggest: parseInt(Object.keys(regionsAreas).sort((a, b) => regionsAreas[b] - regionsAreas[a])[0])
-    };
-};
 
 const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
 const randomizeColor = ({ r, g, b }, c) => ({

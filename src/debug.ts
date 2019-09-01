@@ -1,22 +1,27 @@
 import * as game from './game';
-import { MILLISECONDS_PER_STEP, STEPS_PER_SECOND } from './consts';
+import * as matrix from './matrix';
+import { MILLISECONDS_PER_STEP, STEPS_PER_SECOND, TILE_SIZE } from './consts';
 
-export const start = (debugGame) => {
+export const start = (debugGame: game.Game) => {
     const canvas = document.querySelector('canvas');
     const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
-    let debug;
 
-    if (window['debug']) {
-        debug = window['debug'];
-    } else {
-        debug = {
-            follow: false,
-            zoom: 1
-        };
+    console.log('surfaces');
+    debugGame.level.surfaces.forEach((surface, index) => {
+        const { row, col } = surface[0];
+        console.log(`${index} [${surface.length}] @${matrix.get(debugGame.level.regions.map, row, col)}`);
+    });
 
-        window['debug'] = debug;
-    }
+    const debug = {
+        follow: false,
+        zoom: 0.10655,
+        highlightSurfaces: {},
+        highlightRegions: {},
+        game: debugGame
+    };
+
+    window['debug'] = debug;
 
     let sps = 0;
     let fps = 0;
@@ -50,6 +55,34 @@ export const start = (debugGame) => {
         }
 
         game.renderWorld(debugGame, context);
+
+        for (let surface of Object.keys(debug.highlightSurfaces)) {
+            context.fillStyle = debug.highlightSurfaces[surface];
+            for (let cell of debugGame.level.surfaces[surface]) {
+                context.fillRect(
+                    cell.col * TILE_SIZE,
+                    cell.row * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE
+                );
+            }
+        }
+
+        if (Object.keys(debug.highlightRegions).length > 0) {
+            matrix.iterate(debug.game.level.regions.map, (row, col, value) => {
+                const color = debug.highlightRegions[value];
+                if (color) {
+                    context.fillStyle = color;
+                    context.fillRect(
+                        col * TILE_SIZE,
+                        row * TILE_SIZE,
+                        TILE_SIZE,
+                        TILE_SIZE
+                    );
+                }
+            });
+        }
+
         context.restore();
 
         context.font = '10px sans-serif';
@@ -57,6 +90,7 @@ export const start = (debugGame) => {
         context.fillText(`SCORE: ${debugGame.score}`, 5, 10);
         context.fillText(sps.toString(), 5, 20);
         context.fillText(fps.toString(), 5, 30);
+
 
         frameCount++;
     };

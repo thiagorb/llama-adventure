@@ -51,7 +51,7 @@ interface FoundMovementsPath {
 export const simulateMovements = (): Array<Array<BoundingBox>> => {
     console.log(new Date(), 'start simulate movements');
     const foundMovements = new Map<string, FoundMovementsPath>();
-    const REACTION_TIME = 0.3 * STEPS_PER_SECOND;
+    const REACTION_TIME = 0.15 * STEPS_PER_SECOND;
 
     let current: state.Player = state.createPlayer();
     let next: state.Player = state.createPlayer();
@@ -257,5 +257,5 @@ export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.C
         surfaces.get(value).push({ row, col });
     });
 
-    return [...surfaces.values()].sort((s1, s2) => s1.length - s2.length);
+    return [...surfaces.values()].sort((s1, s2) => s2.length - s1.length);
 };

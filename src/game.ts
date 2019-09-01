@@ -8,16 +8,17 @@ import {
     STEPS_PER_SECOND
 } from './consts';
 import * as player from './player';
-import * as physics from './physics';
+import * as collision from './collision';
 import * as map from './map';
 import * as state from './state';
 import * as sprites from './sprites';
 import * as sound from './sound';
 import * as transitions from './transitions';
 import * as home from './home';
-import * as worker from './worker';
 import * as level from './level';
+import * as tunnel from './tunnel';
 import { deepCopy } from './utils';
+import { getKeys } from './keys';
 
 interface RenderTarget {
     canvas: {
@@ -40,7 +41,9 @@ export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
         }
     }
 
+    tunnel.render(context, game);
     player.render(context, game.states.current);
+    tunnel.renderFade(context, game);
 
     const house = sprites.get('house');
     sprites.draw(context, house, game.states.current.goal.position.x, game.states.current.goal.position.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
@@ -136,11 +139,21 @@ const checkItemsCollection = (game: Game) => {
     }
 };
 
+const lockedKeys = {
+    ArrowUp: false,
+    ArrowLeft: false,
+    ArrowDown: false,
+    ArrowRight: false,
+};
+
 export const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
         if (!game.finished) {
             checkItemsCollection(game);
-            physics.step(game.level.map, game.states);
+            tunnel.step(game);
+            player.update(game.playerLocked ? lockedKeys : getKeys(), game.states.current.player, game.states.next.player);
+            collision.playerMapCollision(game.level.map, game.states.next.player);
+
             if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
                 sound.playJumpSound();
             }
@@ -182,11 +195,12 @@ export interface Game {
     readonly collectedItems: Array<boolean>;
     score: number;
     finished: boolean;
+    tunnel: tunnel.Tunnel;
+    playerLocked: boolean;
 }
 
-export const create = async (): Promise<Game> => {
+export const create = (level: level.Level): Game => {
     const current = state.create();
-    const level = await worker.createLevel();
     current.player.position = level.player;
     current.goal.position = level.goal;
 
@@ -200,6 +214,8 @@ export const create = async (): Promise<Game> => {
         collectedItems: level.items.map(() => false),
         score: 0,
         finished: false,
+        tunnel: null,
+        playerLocked: false,
     };
 };
 

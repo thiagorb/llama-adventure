@@ -3,6 +3,7 @@ import { getKeys } from './keys';
 import * as game from './game';
 import * as debug from './debug';
 import * as sprites from './sprites';
+import * as worker from './worker';
 
 export const start = () => {
     const OPTIONS_Y = 100;
@@ -33,10 +34,11 @@ export const start = () => {
             canvas.removeEventListener('touchend', handleTouchEnd);
             await transitions.fadeOut();
             await sprites.initialize();
+            const newGame = game.create(await worker.createLevel());
             if (process.env.NODE_ENV === 'production') {
-                game.start(await game.create());
+                game.start(newGame);
             } else {
-                debug.start(await game.create());
+                debug.start(newGame);
             }
         }
     };
