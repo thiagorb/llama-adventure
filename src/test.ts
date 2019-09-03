@@ -30,7 +30,6 @@ import { PIXELS_PER_METER, TILE_SIZE } from './consts';
     context.drawImage(rendered, 0, 0);
 
     const region = await findSurfaces(testMap);
-    console.log(region);
 
     context.fillStyle = 'rgba(128, 0, 128, 0.5)';
     context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);

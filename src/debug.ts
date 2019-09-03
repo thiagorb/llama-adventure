@@ -7,10 +7,8 @@ export const start = (debugGame: game.Game) => {
     const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
 
-    console.log('surfaces');
     debugGame.level.surfaces.forEach((surface, index) => {
         const { row, col } = surface[0];
-        console.log(`${index} [${surface.length}] @${matrix.get(debugGame.level.regions.map, row, col)}`);
     });
 
     const debug = {

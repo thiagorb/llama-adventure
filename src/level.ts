@@ -153,14 +153,9 @@ export const calculateRegions = (levelMap: map.Map): RegionsMap => {
 };
 
 export const create = async (): Promise<Level> => {
-    console.log(new Date(), 'before map create');
     const levelMap = map.create(map.randomTiles());
-    console.log(new Date(), 'before find biggest');
     const surfaces = await simulation.findSurfaces(levelMap);
     const regions = calculateRegions(levelMap);
-
-    console.log(new Date(), 'before randomize positions');
-    const surface = surfaces[0];
 
     const acceptedSurfaces = surfaces.filter(surface => surface.length > 100);
     const surfaceByRegion = new Map<number, Array<Surface>>();

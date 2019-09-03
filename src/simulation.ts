@@ -49,7 +49,6 @@ interface FoundMovementsPath {
 }
 
 export const simulateMovements = (): Array<Array<BoundingBox>> => {
-    console.log(new Date(), 'start simulate movements');
     const foundMovements = new Map<string, FoundMovementsPath>();
     const REACTION_TIME = 0.15 * STEPS_PER_SECOND;
 
@@ -128,8 +127,6 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
     };
     transformMovements(foundMovements, []);
 
-    console.log(new Date(), 'end simulate movements');
-
     return movements;
 };
 
@@ -180,7 +177,6 @@ export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.C
             previousCollided = collided;
         }
     }
-    console.log(new Date(), 'mapping');
 
     for (let currentRow = 0; currentRow < matrix.getRows(surfacesMap); currentRow++) {
         for (let col = 0; col < matrix.getCols(surfacesMap); col++) {
@@ -244,7 +240,6 @@ export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.C
 
     const surfaces = new Map<number, Array<map.Cell>>();
 
-    console.log(new Date(), 'calculating sizes');
     matrix.iterate(surfacesMap, (row, col, value) => {
         if (value <= 0) {
             return;
