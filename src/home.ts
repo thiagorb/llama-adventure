@@ -1,5 +1,4 @@
 import * as transitions from './transitions';
-import { getKeys } from './keys';
 import * as game from './game';
 import * as debug from './debug';
 import * as sprites from './sprites';
@@ -10,8 +9,6 @@ export const start = () => {
     const OPTIONS_HEIGHT = 20;
     const START_GAME = 'START GAME';
     const options = [START_GAME];
-    let previousUp = false;
-    let previousDown = false;
     let finished = false;
 
     const canvas = document.querySelector('canvas');
@@ -27,12 +24,27 @@ export const start = () => {
 
     const mapOption = ({ y }) => Math.floor((y - OPTIONS_Y) / OPTIONS_HEIGHT);
 
+    const render = () => {
+        const context = canvas.getContext('2d');
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.textBaseline = 'top';
+        context.fillStyle = 'white';
+        context.fillText('LLAMA ADVENTURE', 110, 50);
+        for (let i = options.length - 1; i >=0; i--) {
+            context.fillStyle = '#444';
+            context.fillRect(100, OPTIONS_Y + OPTIONS_HEIGHT * i, 120, OPTIONS_HEIGHT);
+            context.fillStyle = 'white';
+            context.fillText(options[i], 110, OPTIONS_Y + 5 + OPTIONS_HEIGHT * i);
+        }
+    };
+
     const handleOptionClick = async (option) => {
         if (options[option] === START_GAME) {
             finished = true;
             canvas.removeEventListener('click', handleClick);
             canvas.removeEventListener('touchend', handleTouchEnd);
-            await transitions.fadeOut();
+            await transitions.fadeOut(render);
             await sprites.initialize();
             const newGame = game.create(await worker.createLevel());
             if (process.env.NODE_ENV === 'production') {
@@ -52,20 +64,7 @@ export const start = () => {
             return;
         }
 
-        previousUp = getKeys().ArrowUp;
-        previousDown = getKeys().ArrowDown;
-
-        const context = canvas.getContext('2d');
-
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.textBaseline = 'top';
-        context.fillText('LLAMA ADVENTURE', 110, 50);
-        for (let i = options.length - 1; i >=0; i--) {
-            context.fillStyle = '#444';
-            context.fillRect(100, OPTIONS_Y + OPTIONS_HEIGHT * i, 120, OPTIONS_HEIGHT);
-            context.fillStyle = 'white';
-            context.fillText(options[i], 110, OPTIONS_Y + 5 + OPTIONS_HEIGHT * i);
-        }
+        render();
 
         requestAnimationFrame(loop);
     };

@@ -3,6 +3,7 @@ import corn from '../sprites/corn.png';
 import pepper from '../sprites/pepper.png';
 import cactus from '../sprites/cactus.png';
 import house from '../sprites/house.png';
+import spikes from '../sprites/spikes.png';
 import { cachedInstance } from './utils';
 
 export interface Sprite {
@@ -46,6 +47,13 @@ const sprites = {
         url: house,
         width: 20,
         height: 20,
+        frames: 1,
+        image: null,
+    },
+    spikes: {
+        url: spikes,
+        width: 10,
+        height: 10,
         frames: 1,
         image: null,
     }

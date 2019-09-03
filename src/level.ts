@@ -1,4 +1,4 @@
-import { METERS_PER_PIXEL, TILE_SIZE } from './consts';
+import { METERS_PER_PIXEL, PLAYER_COL_WIDTH, PLAYER_ROW_HEIGHT, TILE_SIZE } from './consts';
 import * as map from './map';
 import * as matrix from './matrix';
 import * as sprites from './sprites';
@@ -153,11 +153,12 @@ export const calculateRegions = (levelMap: map.Map): RegionsMap => {
 };
 
 export const create = async (): Promise<Level> => {
+    const MIN_SURFACE_SIZE = 100;
     const levelMap = map.create(map.randomTiles());
     const surfaces = await simulation.findSurfaces(levelMap);
     const regions = calculateRegions(levelMap);
 
-    const acceptedSurfaces = surfaces.filter(surface => surface.length > 100);
+    const acceptedSurfaces = surfaces.filter(surface => surface.length >= MIN_SURFACE_SIZE);
     const surfaceByRegion = new Map<number, Array<Surface>>();
     acceptedSurfaces.forEach(surface => {
         const { row, col } = surface[0];
@@ -187,6 +188,18 @@ export const create = async (): Promise<Level> => {
         const door2 = { position: next.entrance, other: door1 };
         door1.other = door2;
         doors.push(door1, door2);
+    }
+
+    for (let surface of surfaces.filter(s => s.length < MIN_SURFACE_SIZE)) {
+        for (let cell of surface) {
+            const row = cell.row + PLAYER_ROW_HEIGHT + 1;
+            for (let i = PLAYER_COL_WIDTH; i >= 0; i--) {
+                const col = cell.col + i;
+                if (map.isSolidCell(levelMap, row, col)) {
+                    map.setSpike(levelMap, row - 1, col);
+                }
+            }
+        }
     }
 
     return {

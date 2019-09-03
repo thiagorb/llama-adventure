@@ -20,14 +20,6 @@ import * as tunnel from './tunnel';
 import { deepCopy } from './utils';
 import { getKeys } from './keys';
 
-interface RenderTarget {
-    canvas: {
-        width: number,
-        height: number,
-    },
-    context: CanvasRenderingContext2D;
-}
-
 export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
     context.save();
     context.scale(1 / PIXELS_PER_METER, 1 / PIXELS_PER_METER);
@@ -64,10 +56,11 @@ export const centerPlayer = (game: Game, context: CanvasRenderingContext2D) => {
     );
 };
 
-export const render = (game: Game, target: RenderTarget) => {
-    const context = target.context;
+export const render = (game: Game) => {
+    const canvas = document.querySelector('canvas');
+    const context = canvas.getContext('2d');
 
-    context.clearRect(0, 0, target.canvas.width, target.canvas.height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     context.save();
     centerScreen(context);
@@ -152,7 +145,11 @@ export const step = (game: Game, steps: number) => {
             checkItemsCollection(game);
             tunnel.step(game);
             player.update(game.playerLocked ? lockedKeys : getKeys(), game.states.current.player, game.states.next.player);
-            collision.playerMapCollision(game.level.map, game.states.next.player);
+            collision.playerGroundCollision(game.level.map, game.states.next.player);
+            if (collision.playerSpikeCollision(game.level.map, game.states.next.player)) {
+                game.finished = true;
+                transitions.fadeOut().then(() => home.start());
+            }
 
             if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
                 sound.playJumpSound();
@@ -163,23 +160,19 @@ export const step = (game: Game, steps: number) => {
         game.states.current = temp;
         if (reachedGoal(game.states.current)) {
             game.finished = true;
-            transitions.fadeOut().then(() => home.start());
+            transitions.fadeOut(() => render(game)).then(() => home.start());
         }
     }
 };
 
 const loopFactory = (game: Game) => {
-    const canvas = document.querySelector('canvas');
-    const context = canvas.getContext('2d');
-    context.imageSmoothingEnabled = false;
-    const renderTarget = { canvas, context };
     let stepsSinceBeginning = 0;
 
     const loop = (timestamp: number) => {
         const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
         step(game, Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning));
         stepsSinceBeginning = currentStep;
-        render(game, renderTarget);
+        render(game);
         if (!game.finished) {
             window.requestAnimationFrame(loop);
         }

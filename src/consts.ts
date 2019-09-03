@@ -1,3 +1,5 @@
+import * as map from './map';
+
 export const PIXELS_PER_METER = 12;
 export const METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
 export const STEPS_PER_SECOND = 120;
@@ -12,3 +14,6 @@ export const SCREEN_WIDTH = 320;
 export const SCREEN_HEIGHT = 240;
 export const HORIZONTAL_ACCELERATION = 20 * METERS_PER_SECOND_PER_SECOND;
 export const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
+export const PLAYER_ROW_HEIGHT = map.getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
+export const PLAYER_COL_WIDTH = map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
+export const SPIKE_GAP = 2 * METERS_PER_PIXEL;

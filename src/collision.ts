@@ -1,8 +1,8 @@
-import { METERS_PER_PIXEL, PLAYER_HEIGHT, PLAYER_WIDTH } from './consts';
+import { METERS_PER_PIXEL, PLAYER_HEIGHT, PLAYER_WIDTH, SPIKE_GAP } from './consts';
 import * as map from './map';
 import * as state from './state';
 
-export const playerMapCollision = (levelMap: map.Map, player: state.Player) => {
+export const playerGroundCollision = (levelMap: map.Map, player: state.Player) => {
     const top = player.position.y;
     const left = player.position.x;
     const right = left + PLAYER_WIDTH - METERS_PER_PIXEL;
@@ -26,4 +26,14 @@ export const playerMapCollision = (levelMap: map.Map, player: state.Player) => {
     if (player.speed.x < 0 && map.collidesWithVerticalSegment(levelMap, nextLeft, top, bottom)) {
         player.speed.x = 0;
     }
+};
+
+export const playerSpikeCollision = (levelMap: map.Map, player: state.Player) => {
+    return map.collidesWithHorizontalSegment(
+        levelMap,
+        player.position.y + PLAYER_HEIGHT - SPIKE_GAP,
+        player.position.x + SPIKE_GAP,
+        player.position.x + PLAYER_WIDTH - 2 * SPIKE_GAP,
+        map.TileValue.Spike
+    );
 };

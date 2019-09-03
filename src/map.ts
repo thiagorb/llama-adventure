@@ -1,5 +1,17 @@
 import * as matrix from './matrix';
-import { METERS_PER_PIXEL, PIXELS_PER_METER, PLAYER_HEIGHT, PLAYER_WIDTH, TILE_SIZE } from './consts';
+import * as sprites from './sprites';
+
+import {
+    PIXELS_PER_METER, PLAYER_COL_WIDTH,
+    PLAYER_ROW_HEIGHT,
+    TILE_SIZE
+} from './consts';
+
+export const enum TileValue {
+    Spike = -1,
+    Empty ,
+    Ground
+}
 
 export interface Map {
     tiles: matrix.Matrix<Int8Array>;
@@ -19,10 +31,6 @@ export const getRows = (map: Map) => matrix.getRows(map.tiles);
 export const getCol = (x: number) => Math.floor(x / TILE_SIZE);
 export const getRow = (y: number) => Math.floor(y / TILE_SIZE);
 
-
-const PLAYER_ROW_HEIGHT = getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
-const PLAYER_COL_WIDTH = getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
-
 export const collides = (
     levelMap: Map,
     rowTop: number,
@@ -40,16 +48,16 @@ export const collides = (
     return false;
 };
 
-export const getCellValue = (map: Map, row: number, col: number) =>
+export const getCellValue = (map: Map, row: number, col: number): TileValue =>
     matrix.get(map.tiles, row, col);
 
-export const getPositionValue = (map: Map, x: number, y: number) =>
+export const getPositionValue = (map: Map, x: number, y: number): TileValue =>
     getCellValue(map, getRow(y), getCol(x));
 
-export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2: number) => {
+export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2: number, value: TileValue = null) => {
     const col = getCol(x);
     for (let row = getRow(y1); row <= getRow(y2); row++) {
-        if (isSolidCell(map, row, col)) {
+        if ((value === null && isSolidCell(map, row, col)) || value === getCellValue(map, row, col)) {
             return true;
         }
     }
@@ -57,35 +65,15 @@ export const collidesWithVerticalSegment = (map: Map, x: number, y1: number, y2:
     return false;
 };
 
-export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x2: number) => {
+export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x2: number, value: TileValue = null) => {
     const row = getRow(y);
     for (let col = getCol(x1); col <= getCol(x2); col++) {
-        if (isSolidCell(map, row, col)) {
+        if ((value === null && isSolidCell(map, row, col)) || value === getCellValue(map, row, col)) {
             return true;
         }
     }
 
     return false;
-};
-
-export const collidesWithRectangle = (map: Map, left: number, top: number, width: number, height: number) => {
-    const right = left + PLAYER_WIDTH - METERS_PER_PIXEL;
-
-    if (collidesWithHorizontalSegment(map, top, left, right)) {
-        return true;
-    }
-
-    const bottom = top + PLAYER_HEIGHT - METERS_PER_PIXEL;
-
-    if (collidesWithHorizontalSegment(map, bottom, left, right)) {
-        return true;
-    }
-
-    if (collidesWithVerticalSegment(map, left, top, bottom)) {
-        return true;
-    }
-
-    return collidesWithVerticalSegment(map, right, top, bottom);
 };
 
 export const randomTiles = () => {
@@ -97,8 +85,8 @@ export const randomTiles = () => {
     const rows = 100;
     const cols = 300;
 
-    let tiles = matrix.create(Int8Array, rows, cols, () => Math.random() < initialChance ? 1 : 0);
-    let next = matrix.create(Int8Array, rows, cols, () => 0);
+    let tiles = matrix.create(Int8Array, rows, cols, () => Math.random() < initialChance ? TileValue.Ground : TileValue.Empty);
+    let next = matrix.create(Int8Array, rows, cols, () => TileValue.Empty);
 
     for (let step = 0; step < numberOfSteps; step++) {
         matrix.iterate(next, (row, col) => {
@@ -118,7 +106,7 @@ export const randomTiles = () => {
                 ? neighborsCount >= deathLimit
                 : neighborsCount > birthLimit;
 
-            matrix.set(next, row, col, nextValue ? 1 : 0);
+            matrix.set(next, row, col, nextValue ? TileValue.Ground : TileValue.Empty);
         });
 
         let temp = tiles;
@@ -135,6 +123,8 @@ export const isSolidCell = (map: Map, row, col) =>
     !matrix.has(map.tiles, row, col) ||
     isSolidValue(getCellValue(map, row, col));
 
+export const setSpike = (map: Map, row, col) => matrix.set(map.tiles, row, col, TileValue.Spike);
+
 const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
 const randomizeColor = ({ r, g, b }, c) => ({
     r: randomizeValue(r, c),
@@ -144,36 +134,14 @@ const randomizeColor = ({ r, g, b }, c) => ({
 const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
 const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 
-const complexRender = (map: Map, canvas: HTMLCanvasElement) => {
-    const context = canvas.getContext('2d');
-    for (let x = 0; x < canvas.width; x++) {
-        let depth = 10;
-        for (let y = 0; y < canvas.height; y++) {
-            if (isSolidPosition(map, x / PIXELS_PER_METER, y / PIXELS_PER_METER)) {
-                if (depth > 3 + Math.random() + Math.cos(x / 2)) {
-                    context.fillStyle = formatColor(
-                        randomizeColor(brightness({ r: 120, g: 69, b: 20 }, 1 - 0.05 * Math.cos(x / 10) * Math.sin(x / 20 + y / 10)), 10)
-                    );
-                } else {
-                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
-                }
-                depth++;
-            } else {
-                depth = 0;
-                context.fillStyle = '#69d';
-            }
-            context.fillRect(x, y, 1, 1);
-        }
-    }
-};
-
 const simpleRender = (map: Map, canvas: HTMLCanvasElement) => {
     const context = canvas.getContext('2d');
     context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
     for (let col = 0; col < getCols(map); col++) {
         let depth = 2;
         for (let row = 0; row < getRows(map); row++) {
-            if (isSolidCell(map, row, col)) {
+            const tile = getCellValue(map, row, col);
+            if (tile === TileValue.Ground) {
                 if (depth > 0) {
                     context.fillStyle = formatColor(
                         randomizeColor({ r: 120, g: 69, b: 20 }, 10)
@@ -181,12 +149,18 @@ const simpleRender = (map: Map, canvas: HTMLCanvasElement) => {
                 } else {
                     context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
                 }
+                context.fillRect(col, row, 1, 1);
                 depth++;
-            } else {
-                depth = 0;
+            } else if (tile === TileValue.Spike) {
                 context.fillStyle = '#69d';
+                context.fillRect(col, row, 1, 1);
+                sprites.draw(context, sprites.get('spikes'), col, row, 1, 1);
+                depth = 0;
+            } else {
+                context.fillStyle = '#69d';
+                context.fillRect(col, row, 1, 1);
+                depth = 0;
             }
-            context.fillRect(col, row, 1, 1);
         }
     }
 };
