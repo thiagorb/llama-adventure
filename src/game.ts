@@ -1,4 +1,6 @@
 import {
+    canvas,
+    context,
     METERS_PER_PIXEL, MILLISECONDS_PER_STEP,
     PIXELS_PER_METER,
     PLAYER_HEIGHT,
@@ -14,7 +16,7 @@ import * as state from './state';
 import * as sprites from './sprites';
 import * as sound from './sound';
 import * as transitions from './transitions';
-import * as home from './home';
+import * as after from './after';
 import * as level from './level';
 import * as tunnel from './tunnel';
 import { deepCopy } from './utils';
@@ -34,11 +36,11 @@ export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
     }
 
     tunnel.render(context, game);
-    player.render(context, game.states.current);
+    player.render(context, game.player.current);
     tunnel.renderFade(context, game);
 
     const house = sprites.get('house');
-    sprites.draw(context, house, game.states.current.goal.position.x, game.states.current.goal.position.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
+    sprites.draw(context, house, game.level.goal.x, game.level.goal.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
 };
 
 export const centerScreen = (context: CanvasRenderingContext2D) => {
@@ -51,15 +53,12 @@ export const scaleWorld = (context: CanvasRenderingContext2D) => {
 
 export const centerPlayer = (game: Game, context: CanvasRenderingContext2D) => {
     context.translate(
-        -game.states.current.player.position.x - PLAYER_WIDTH / 2,
-        -game.states.current.player.position.y - PLAYER_HEIGHT / 2
+        -game.player.current.position.x - PLAYER_WIDTH / 2,
+        -game.player.current.position.y - PLAYER_HEIGHT / 2
     );
 };
 
 export const render = (game: Game) => {
-    const canvas = document.querySelector('canvas');
-    const context = canvas.getContext('2d');
-
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     context.save();
@@ -81,12 +80,12 @@ const distance2 = (p1: state.Vector2D, p2: state.Vector2D) => {
     return dx * dx + dy * dy;
 };
 
-const reachedGoal = (state: state.State) =>
-    distance2(state.player.position, state.goal.position) < PLAYER_HEIGHT * PLAYER_HEIGHT;
+const reachedGoal = (game: Game) =>
+    distance2(game.player.current.position, game.level.goal) < PLAYER_HEIGHT * PLAYER_HEIGHT;
 
 const checkItemsCollection = (game: Game) => {
     const items = game.level.items;
-    const playerPosition = game.states.current.player.position;
+    const playerPosition = game.player.current.position;
     const minX = playerPosition.x - 2 * PLAYER_WIDTH;
     const maxX = playerPosition.x + 2 * PLAYER_WIDTH;
     let minStartIndex = 0;
@@ -141,64 +140,72 @@ const lockedKeys = {
 
 export const step = (game: Game, steps: number) => {
     for (let i = 0; i < steps; i++) {
-        if (!game.finished) {
-            checkItemsCollection(game);
-            tunnel.step(game);
-            player.update(game.playerLocked ? lockedKeys : getKeys(), game.states.current.player, game.states.next.player);
-            collision.playerGroundCollision(game.level.map, game.states.next.player);
-            if (collision.playerSpikeCollision(game.level.map, game.states.next.player)) {
-                game.finished = true;
-                transitions.fadeOut().then(() => home.start());
-            }
-
-            if (game.states.current.player.speed.y >= 0 && game.states.next.player.speed.y < 0) {
-                sound.playJumpSound();
-            }
+        checkItemsCollection(game);
+        tunnel.step(game);
+        player.update(game.playerLocked ? lockedKeys : getKeys(), game.player.current, game.player.next);
+        collision.playerGroundCollision(game.level.map, game.player.next);
+        if (collision.playerSpikeCollision(game.level.map, game.player.next)) {
+            game.status = Status.Lost;
         }
-        let temp = game.states.next;
-        game.states.next = game.states.current;
-        game.states.current = temp;
-        if (reachedGoal(game.states.current)) {
-            game.finished = true;
-            transitions.fadeOut(() => render(game)).then(() => home.start());
+
+        if (game.player.current.speed.y >= 0 && game.player.next.speed.y < 0) {
+            sound.playJumpSound();
+        }
+
+        let temp = game.player.next;
+        game.player.next = game.player.current;
+        game.player.current = temp;
+
+        if (reachedGoal(game)) {
+            game.status = Status.Won;
         }
     }
 };
 
-const loopFactory = (game: Game) => {
+export const loopFactory = (game: Game, stepFunction: typeof step, renderFunction: typeof render) => {
     let stepsSinceBeginning = 0;
 
     const loop = (timestamp: number) => {
+        const previousStatus = game.status;
         const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
-        step(game, Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning));
+        stepFunction(game, Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning));
         stepsSinceBeginning = currentStep;
-        render(game);
-        if (!game.finished) {
+        renderFunction(game);
+        if (game.status === Status.Playing) {
             window.requestAnimationFrame(loop);
+        } else if (previousStatus === Status.Playing) {
+            const render = () => renderFunction(game);
+            transitions.fade({ render, from: 0, to: 0.5, time: 2000 })
+                .then(() => after.start({ lastGame: game, renderGame: render }));
         }
     };
 
     return loop;
 };
 
+export const enum Status {
+    Playing,
+    Won,
+    Lost
+}
+
 export interface Game {
-    readonly states: state.States;
+    readonly player: state.PlayerStates;
     readonly level: level.Level;
     readonly renderedMap: CanvasImageSource;
     readonly collectedItems: Array<boolean>;
     score: number;
-    finished: boolean;
+    status: Status;
     tunnel: tunnel.Tunnel;
     playerLocked: boolean;
 }
 
 export const create = (level: level.Level): Game => {
-    const current = state.create();
-    current.player.position = level.player;
-    current.goal.position = level.goal;
+    const current = state.createPlayer();
+    current.position = deepCopy(level.player);
 
     return {
-        states: {
+        player: {
             current,
             next: deepCopy(current)
         },
@@ -206,13 +213,14 @@ export const create = (level: level.Level): Game => {
         renderedMap: map.render(level.map),
         collectedItems: level.items.map(() => false),
         score: 0,
-        finished: false,
+        status: Status.Playing,
         tunnel: null,
         playerLocked: false,
     };
 };
 
-export const start = (game: Game) => {
-    const loop = loopFactory(game);
+export const start = async (game: Game) => {
+    await transitions.fade({ render: () => render(game), from: 1, to: 0, time: 500 });
+    const loop = loopFactory(game, step, render);
     loop(0);
 };

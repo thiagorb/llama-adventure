@@ -18,14 +18,9 @@ export interface Player extends Object {
     frame: number;
 }
 
-export interface State {
-    player: Player;
-    goal: Object;
-}
-
-export interface States {
-    current: State;
-    next: State;
+export interface PlayerStates {
+    current: Player;
+    next: Player;
 }
 
 export const createVector = () => ({ x: 0, y: 0 });
@@ -38,11 +33,4 @@ export const createPlayer = () => ({
     touchingFloor: false,
     touchingCeiling: false,
     frame: 0,
-});
-
-export const create = (): State => ({
-    player: createPlayer(),
-    goal: {
-        position: createVector(),
-    }
 });

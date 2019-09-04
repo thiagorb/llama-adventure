@@ -1,6 +1,5 @@
 import * as game from './game';
 import * as sprites from './sprites';
-import * as state from './state';
 import * as map from './map';
 import * as matrix from './matrix';
 import { TILE_SIZE } from './consts';
@@ -28,9 +27,6 @@ import { TILE_SIZE } from './consts';
         ])
     });
 
-    const renderedMap = map.render(levelMap);
-    const gameState = state.create();
-    gameState.goal.position = { x: 50, y: 50 };
     const door1 = {
         position: {
             x: 6 * TILE_SIZE,

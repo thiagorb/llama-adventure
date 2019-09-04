@@ -1,7 +1,16 @@
-const FADE_TIME = 500; //milliseconds
+import { canvas } from './consts';
 
-export const fadeOut = (render = null) => new Promise((resolve) => {
-    const canvas = document.querySelector('canvas');
+interface TransitionOptions {
+    time: number;
+    render: (timestamp: number) => void;
+}
+
+interface FadeOptions extends TransitionOptions {
+    from: number;
+    to: number;
+}
+
+export const fade = (options: FadeOptions) => new Promise((resolve) => {
     let start = null;
 
     const frame = (timestamp) => {
@@ -10,14 +19,15 @@ export const fadeOut = (render = null) => new Promise((resolve) => {
         }
 
         const context = canvas.getContext('2d');
-        if (render) {
-            render();
+        if (options.render) {
+            options.render(timestamp);
         }
-        const alpha = Math.min(1, (timestamp - start) / FADE_TIME);
+        const step = (timestamp - start) / options.time;
+        const alpha = Math.min(1, options.from + (options.to - options.from) * step);
         context.fillStyle = `rgba(0, 0, 0, ${alpha})`;
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (timestamp < start + FADE_TIME) {
+        if (timestamp < start + options.time) {
             requestAnimationFrame(frame);
         } else {
             resolve();

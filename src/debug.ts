@@ -1,19 +1,14 @@
 import * as game from './game';
+import { Status } from './game';
 import * as matrix from './matrix';
-import { MILLISECONDS_PER_STEP, STEPS_PER_SECOND, TILE_SIZE } from './consts';
+import { canvas, context, TILE_SIZE } from './consts';
+import * as transitions from './transitions';
 
-export const start = (debugGame: game.Game) => {
-    const canvas = document.querySelector('canvas');
-    const context = canvas.getContext('2d');
-    context.imageSmoothingEnabled = false;
-
-    debugGame.level.surfaces.forEach((surface, index) => {
-        const { row, col } = surface[0];
-    });
+export const start = async (debugGame: game.Game) => {
 
     const debug = {
-        follow: false,
-        zoom: 0.10655,
+        follow: true,
+        zoom: 1, //0.10655,
         highlightSurfaces: {},
         highlightRegions: {},
         game: debugGame
@@ -93,20 +88,16 @@ export const start = (debugGame: game.Game) => {
         frameCount++;
     };
 
-    let stepsSinceBeginning = 0;
-    const loop = (timestamp: number) => {
-        const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
-        const steps = Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning);
-        game.step(debugGame, steps);
+    const step = (_: game.Game, steps: number) => {
         stepCount += steps;
-        stepsSinceBeginning = currentStep;
-        render();
-        if (debugGame.finished) {
+        game.step(debugGame, steps);
+        if (secondInterval != null && debugGame.status !== Status.Playing) {
             clearInterval(secondInterval);
-        } else {
-            window.requestAnimationFrame(loop);
+            secondInterval = null;
         }
     };
 
+    await transitions.fade({ render, from: 1, to: 0, time: 500 });
+    const loop = game.loopFactory(debugGame, step, render);
     loop(0);
 };

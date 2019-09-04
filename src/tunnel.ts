@@ -24,7 +24,7 @@ const create = (door: level.Door) => ({
 });
 
 export const step = (game: game.Game) => {
-    const playerPosition = game.states.current.player.position;
+    const playerPosition = game.player.current.position;
     let playerInDoor: level.Door = null;
     for (let door of game.level.doors) {
         if (door.position.x + DOOR_WIDTH < playerPosition.x + PLAYER_WIDTH) {

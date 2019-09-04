@@ -17,3 +17,6 @@ export const MILLISECONDS_PER_STEP = 1000 / STEPS_PER_SECOND;
 export const PLAYER_ROW_HEIGHT = map.getRow(PLAYER_HEIGHT - METERS_PER_PIXEL);
 export const PLAYER_COL_WIDTH = map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
 export const SPIKE_GAP = 2 * METERS_PER_PIXEL;
+export const canvas = typeof document !== 'undefined' && document.querySelector('canvas');
+export const context = canvas && canvas.getContext('2d');
+context && (context.imageSmoothingEnabled = false, context.textBaseline = 'top');

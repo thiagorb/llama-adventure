@@ -70,14 +70,14 @@ export const update = (keys: Keys, current: state.Player, next: state.Player) =>
     next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames('llama');
 };
 
-export const render = (context: CanvasRenderingContext2D, state: state.State) => {
+export const render = (context: CanvasRenderingContext2D, player: state.Player) => {
     context.save();
-    context.translate(state.player.position.x, state.player.position.y);
-    if (state.player.left) {
+    context.translate(player.position.x, player.position.y);
+    if (player.left) {
         context.translate(PLAYER_WIDTH, 0);
         context.scale(-1, 1);
     }
 
-    sprites.draw(context, sprites.get('llama'), 0, 0, PLAYER_WIDTH, PLAYER_HEIGHT, state.player.frame);
+    sprites.draw(context, sprites.get('llama'), 0, 0, PLAYER_WIDTH, PLAYER_HEIGHT, player.frame);
     context.restore();
 };
