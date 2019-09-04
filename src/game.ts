@@ -22,11 +22,16 @@ import * as tunnel from './tunnel';
 import { deepCopy } from './utils';
 import { getKeys } from './keys';
 
-export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
+export const renderWorld = (game: Game) => {
     context.save();
     context.scale(1 / PIXELS_PER_METER, 1 / PIXELS_PER_METER);
     context.drawImage(game.renderedMap, 0, 0);
     context.restore();
+
+    tunnel.render(game);
+
+    const house = sprites.get('house');
+    sprites.draw(context, house, game.level.goal.x, game.level.goal.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
 
     for (let i = game.collectedItems.length - 1; i >= 0; i--) {
         if (!game.collectedItems[i]) {
@@ -35,23 +40,19 @@ export const renderWorld = (game: Game, context: CanvasRenderingContext2D) => {
         }
     }
 
-    tunnel.render(context, game);
-    player.render(context, game.player.current);
-    tunnel.renderFade(context, game);
-
-    const house = sprites.get('house');
-    sprites.draw(context, house, game.level.goal.x, game.level.goal.y, house.width * METERS_PER_PIXEL, house.height * METERS_PER_PIXEL);
+    player.render(game.player.current);
+    tunnel.renderFade(game);
 };
 
-export const centerScreen = (context: CanvasRenderingContext2D) => {
+export const centerScreen = () => {
     context.translate(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
 };
 
-export const scaleWorld = (context: CanvasRenderingContext2D) => {
+export const scaleWorld = () => {
     context.scale(PIXELS_PER_METER, PIXELS_PER_METER);
 };
 
-export const centerPlayer = (game: Game, context: CanvasRenderingContext2D) => {
+export const centerPlayer = (game: Game) => {
     context.translate(
         -game.player.current.position.x - PLAYER_WIDTH / 2,
         -game.player.current.position.y - PLAYER_HEIGHT / 2
@@ -62,10 +63,10 @@ export const render = (game: Game) => {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     context.save();
-    centerScreen(context);
-    scaleWorld(context);
-    centerPlayer(game, context);
-    renderWorld(game, context);
+    centerScreen();
+    scaleWorld();
+    centerPlayer(game);
+    renderWorld(game);
     context.restore();
 
     context.font = '10px sans-serif';
@@ -192,7 +193,7 @@ export const enum Status {
 export interface Game {
     readonly player: state.PlayerStates;
     readonly level: level.Level;
-    readonly renderedMap: CanvasImageSource;
+    readonly renderedMap: HTMLCanvasElement;
     readonly collectedItems: Array<boolean>;
     score: number;
     status: Status;

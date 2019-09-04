@@ -72,39 +72,47 @@ const randomizePositions = (surface: Surface): Tunnel => {
     };
 };
 
+export const createItem = (type: ItemType, x: number, y: number): Item => {
+    const itemType = itemsPrototypes[type];
+    const sprite = sprites.get(itemType.sprite);
+
+    return {
+        position: { x, y },
+        score: itemType.score,
+        sprite: itemType.sprite,
+        width: sprite.width * METERS_PER_PIXEL,
+        height: sprite.height * METERS_PER_PIXEL,
+    };
+};
+
+const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number }> = [
+    {
+        sprite: 'corn',
+        score: 10,
+    },
+    {
+        sprite: 'pepper',
+        score: 20,
+    },
+    {
+        sprite: 'cactus',
+        score: 50,
+    },
+];
+
+export const enum ItemType {
+    Corn,
+    Pepper,
+    Cactus
+}
+
 const randomizeItems = (surface: Surface): Array<Item> => {
     const items: Array<Item> = [];
-    const ITEMS_COUNT = 50;
-    const step = surface.length / ITEMS_COUNT;
-    const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number }>  = [
-        {
-            sprite: 'corn',
-            score: 10,
-        },
-        {
-            sprite: 'pepper',
-            score: 20,
-        },
-        {
-            sprite: 'cactus',
-            score: 50,
-        },
-    ];
 
-    for (let i = 0; i < ITEMS_COUNT; i++) {
-        const cell = surface[Math.floor(i * step)];
-        const itemType = itemsPrototypes[i % 3];
-        const sprite = sprites.get(itemType.sprite);
-        items.push({
-            position: {
-                x: cell.col * TILE_SIZE,
-                y: cell.row * TILE_SIZE
-            },
-            score: itemType.score,
-            sprite: itemType.sprite,
-            width: sprite.width * METERS_PER_PIXEL,
-            height: sprite.height * METERS_PER_PIXEL,
-        });
+    for (let i = 0; i < surface.length; i += 5) {
+        const cell = surface[Math.floor(i)];
+        const type = Math.floor(Math.pow(Math.random(), 3) * 3);
+        items.push(createItem(type, cell.col * TILE_SIZE, cell.row * TILE_SIZE));
     }
     return items.sort((a, b) => a.position.x - b.position.x);
 };
@@ -179,6 +187,7 @@ export const create = async (): Promise<Level> => {
 
     const player = edges[0].entrance;
     const goal = edges[edges.length - 1].exit;
+    goal.y += 1;
     const combinedSurface = acceptedSurfaces.reduce((acc, e) => acc.concat(e));
     const doors: Array<Door> = [];
     for (let i = 0; i < edges.length - 1; i++) {

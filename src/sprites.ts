@@ -46,7 +46,7 @@ const sprites = {
     house: {
         url: house,
         width: 20,
-        height: 20,
+        height: 19,
         frames: 1,
         image: null,
     },

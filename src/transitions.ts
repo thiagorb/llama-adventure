@@ -1,4 +1,4 @@
-import { canvas } from './consts';
+import { canvas, context } from './consts';
 
 interface TransitionOptions {
     time: number;
@@ -18,7 +18,6 @@ export const fade = (options: FadeOptions) => new Promise((resolve) => {
             start = timestamp;
         }
 
-        const context = canvas.getContext('2d');
         if (options.render) {
             options.render(timestamp);
         }

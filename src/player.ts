@@ -1,4 +1,5 @@
 import {
+    context,
     HORIZONTAL_ACCELERATION,
     METERS_PER_SECOND,
     METERS_PER_SECOND_PER_SECOND,
@@ -70,7 +71,7 @@ export const update = (keys: Keys, current: state.Player, next: state.Player) =>
     next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames('llama');
 };
 
-export const render = (context: CanvasRenderingContext2D, player: state.Player) => {
+export const render = (player: state.Player) => {
     context.save();
     context.translate(player.position.x, player.position.y);
     if (player.left) {

@@ -31,7 +31,7 @@ export const start = async (debugGame: game.Game) => {
         if (debug.zoom) {
             context.scale(debug.zoom, debug.zoom);
         }
-        game.scaleWorld(context);
+        game.scaleWorld();
     };
 
     const render = () => {
@@ -40,14 +40,14 @@ export const start = async (debugGame: game.Game) => {
         context.save();
 
         if (debug.follow) {
-            game.centerScreen(context);
+            game.centerScreen();
             scale();
-            game.centerPlayer(debugGame, context);
+            game.centerPlayer(debugGame);
         } else {
             scale();
         }
 
-        game.renderWorld(debugGame, context);
+        game.renderWorld(debugGame);
 
         for (let surface of Object.keys(debug.highlightSurfaces)) {
             context.fillStyle = debug.highlightSurfaces[surface];

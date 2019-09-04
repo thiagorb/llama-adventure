@@ -3,7 +3,7 @@ import * as transitions from './transitions';
 import * as home from './home';
 import * as game from './game';
 import { Status } from './game';
-import { canvas } from './consts';
+import { BUTTON_HEIGHT, canvas, context } from './consts';
 
 export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGame: () => void }) => {
     const LEFT = 70;
@@ -11,11 +11,8 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
     const BUTTON_X = LEFT;
     const BUTTON_Y = TOP + 80;
     const BUTTON_WIDTH = 45;
-    const BUTTON_HEIGHT = 20;
     let finished = false;
     const render = () => {
-        const context = canvas.getContext('2d');
-
         renderGame();
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
         context.fillRect(0, 0, canvas.width, canvas.height);
@@ -32,7 +29,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
             context.fillText("MANAGE TO REACH YOUR HOME.", LEFT, TOP + 50);
         }
 
-        ui.drawButton(context, 'OKAY', BUTTON_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
+        ui.drawButton('OKAY', BUTTON_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
     };
 
     const checkClick = async (x, y) => {
@@ -41,7 +38,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
             canvas.removeEventListener('click', handleClick);
             canvas.removeEventListener('touchend', handleTouchEnd);
             await transitions.fade({ time: 500, from: 0.5, to: 1, render: renderGame });
-            home.start({ lastGame, renderGame });
+            home.start({ lastGame });
         }
     };
 

@@ -1,6 +1,6 @@
 import * as map from './map';
 import { findSurfaces } from './simulation';
-import { PIXELS_PER_METER, TILE_SIZE } from './consts';
+import { context, PIXELS_PER_METER, TILE_SIZE } from './consts';
 
 (async () => {
     const testMap = {
@@ -26,14 +26,13 @@ import { PIXELS_PER_METER, TILE_SIZE } from './consts';
     };
 
     const rendered = map.render(testMap);
-    const context = document.querySelector('canvas').getContext('2d')
     context.drawImage(rendered, 0, 0);
 
-    const region = await findSurfaces(testMap);
+    const surfaces = await findSurfaces(testMap);
 
     context.fillStyle = 'rgba(128, 0, 128, 0.5)';
     context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
-    region.forEach(({ row, col }) => {
+    surfaces[0].forEach(({ row, col }) => {
         context.fillRect(col, row, 1, 1);
     });
 })();

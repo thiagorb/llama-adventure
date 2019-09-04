@@ -68,7 +68,10 @@
             }
 
             .touch [data-touch-key] {
-                display: block;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 30px;
             }
 
             .touch [data-touch-key]:active {
@@ -79,9 +82,9 @@
     <body>
         <div id="container">
             <canvas width="320" height="240"></canvas>
-            <div data-touch-key="ArrowUp"></div>
-            <div data-touch-key="ArrowLeft"></div>
-            <div data-touch-key="ArrowRight"></div>
+            <div data-touch-key="ArrowUp">↑</div>
+            <div data-touch-key="ArrowLeft">←</div>
+            <div data-touch-key="ArrowRight">→</div>
             <script src="./src/main.ts"></script>
         </div>
     </body>

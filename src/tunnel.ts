@@ -1,4 +1,12 @@
-import { DOOR_HEIGHT, DOOR_WIDTH, METERS_PER_PIXEL, PLAYER_HEIGHT, PLAYER_WIDTH, STEPS_PER_SECOND } from './consts';
+import {
+    context,
+    DOOR_HEIGHT,
+    DOOR_WIDTH,
+    METERS_PER_PIXEL,
+    PLAYER_HEIGHT,
+    PLAYER_WIDTH,
+    STEPS_PER_SECOND
+} from './consts';
 import * as game from './game';
 import * as level from './level';
 
@@ -88,7 +96,7 @@ export const step = (game: game.Game) => {
     }
 };
 
-export const render = (context: CanvasRenderingContext2D, game: game.Game) => {
+export const render = (game: game.Game) => {
     for (let door of game.level.doors) {
         context.save();
         context.translate(door.position.x, door.position.y);
@@ -113,7 +121,7 @@ export const render = (context: CanvasRenderingContext2D, game: game.Game) => {
     }
 };
 
-export const renderFade = (context: CanvasRenderingContext2D, game: game.Game) => {
+export const renderFade = (game: game.Game) => {
     if (!game.tunnel || game.tunnel.state === State.Opening || game.tunnel.state === State.Closing) {
         return;
     }
