@@ -13,7 +13,7 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.textBaseline = 'top';
         context.fillStyle = 'white';
-        context.fillText('LLAMA ADVENTURE', 110, 50);
+        context.fillText('LLAMA ADVENTURE', 120, 50);
         buttons.forEach(({ button }) => ui.drawButton(button));
     };
 
