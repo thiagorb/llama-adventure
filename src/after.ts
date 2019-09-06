@@ -10,7 +10,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
     const TOP = 60;
     const BUTTON_X = LEFT;
     const BUTTON_Y = TOP + 80;
-    const BUTTON_WIDTH = 45;
+    const BUTTON_WIDTH = 48;
     let finished = false;
 
     const render = () => {
