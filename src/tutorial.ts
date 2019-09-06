@@ -5,17 +5,20 @@ import * as game from './game';
 import { METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
 import { cachedInstance } from './utils';
 
-export const getTutorial = () => {
+export const getLevel = cachedInstance((): level.Level => {
     const WIDTH = 200;
     const HEIGHT = 32;
-    const tiles = matrix.create(Int8Array, HEIGHT, WIDTH, (row, col) => {
-        return row < HEIGHT / 4
-            || row >= HEIGHT * 3 / 4
-            || col < 1
-            || col >= WIDTH - 1
-            ? map.TileValue.Ground
-            : map.TileValue.Empty;
-    });
+    const CEIL = Math.round(HEIGHT / 4);
+    const FLOOR = Math.round(HEIGHT * 3 / 4);
+
+    const ground = (row, col) => row < CEIL || row >= FLOOR || col < 1 || col >= WIDTH - 1;
+
+    const tiles = matrix.create(
+        Int8Array,
+        HEIGHT,
+        WIDTH,
+        (row, col) => ground(row, col) ? map.TileValue.Ground : map.TileValue.Empty,
+    );
 
     const iterate = (from: number, to: number, callback) => {
         for (let i = from; i <= to; i++) {
@@ -43,7 +46,7 @@ export const getTutorial = () => {
     const door = { position: { x: 100, y: playerY - 2 * METERS_PER_PIXEL }, other };
     other.other = door;
 
-    const tutorialLevel: level.Level = {
+    return {
         map: tutorialMap,
         surfaces: null,
         regions: null,
@@ -56,8 +59,10 @@ export const getTutorial = () => {
             level.createItem(level.ItemType.Cactus, 68, playerY),
         ],
     };
+});
 
-    const tutorialGame = game.create(tutorialLevel);
+export const createGame = () => {
+    const tutorialGame = game.create(getLevel());
     const context = tutorialGame.renderedMap.getContext('2d');
     context.fillStyle = 'white';
     context.resetTransform();

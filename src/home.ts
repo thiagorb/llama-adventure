@@ -4,7 +4,7 @@ import * as sprites from './sprites';
 import * as worker from './worker';
 import * as ui from './ui';
 import { BUTTON_HEIGHT, canvas, context } from './consts';
-import { getTutorial } from './tutorial';
+import * as tutorial from './tutorial';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
@@ -30,11 +30,11 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     };
 
     const buttonsData = [
-        { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(getTutorial())) },
+        { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(tutorial.createGame())) },
         { label: 'PLAY GAME', handler: () => startGame(worker.createLevel().then(game.create)) },
     ];
 
-    if (lastGame) {
+    if (lastGame && lastGame.level !== tutorial.getLevel()) {
         buttonsData.unshift({ label: 'REPLAY GAME', handler: () => startGame(Promise.resolve(game.create(lastGame.level))) });
     }
 
