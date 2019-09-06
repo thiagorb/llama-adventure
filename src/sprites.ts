@@ -1,9 +1,3 @@
-import llama from '../sprites/llama.png';
-import corn from '../sprites/corn.png';
-import pepper from '../sprites/pepper.png';
-import cactus from '../sprites/cactus.png';
-import house from '../sprites/house.png';
-import spikes from '../sprites/spikes.png';
 import { cachedInstance } from './utils';
 
 export interface Sprite {
@@ -16,42 +10,42 @@ export interface Sprite {
 
 const sprites = {
     llama: {
-        url: llama,
+        url: require('../sprites/llama.png'),
         width: 12,
         height: 18,
         frames: 3,
         image: null,
     },
     corn: {
-        url: corn,
+        url: require('../sprites/corn.png'),
         width: 9,
         height: 20,
         frames: 1,
         image: null,
     },
     pepper: {
-        url: pepper,
+        url: require('../sprites/pepper.png'),
         width: 9,
         height: 20,
         frames: 1,
         image: null,
     },
     cactus: {
-        url: cactus,
+        url: require('../sprites/cactus.png'),
         width: 14,
         height: 24,
         frames: 1,
         image: null,
     },
     house: {
-        url: house,
+        url: require('../sprites/house.png'),
         width: 20,
         height: 19,
         frames: 1,
         image: null,
     },
     spikes: {
-        url: spikes,
+        url: require('../sprites/spikes.png'),
         width: 10,
         height: 10,
         frames: 1,

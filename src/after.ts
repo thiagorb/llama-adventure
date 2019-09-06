@@ -12,6 +12,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
     const BUTTON_Y = TOP + 80;
     const BUTTON_WIDTH = 45;
     let finished = false;
+
     const render = () => {
         renderGame();
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -29,24 +30,16 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
             context.fillText("MANAGE TO REACH YOUR HOME.", LEFT, TOP + 50);
         }
 
-        ui.drawButton('OKAY', BUTTON_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
+        ui.drawButton(okayButton);
     };
 
-    const checkClick = async (x, y) => {
-        if (x >= BUTTON_X && x < BUTTON_X + BUTTON_WIDTH && y >= BUTTON_Y && y < BUTTON_Y + BUTTON_HEIGHT) {
-            finished = true;
-            canvas.removeEventListener('click', handleClick);
-            canvas.removeEventListener('touchend', handleTouchEnd);
-            await transitions.fade({ time: 500, from: 0.5, to: 1, render: renderGame });
-            home.start({ lastGame });
-        }
-    };
-
-    const handleClick = ui.mapClickCoordinates(checkClick);
-    const handleTouchEnd = ui.mapTouchCoordinates(checkClick);
-
-    canvas.addEventListener('click', handleClick);
-    canvas.addEventListener('touchend', handleTouchEnd);
+    const okayButton = ui.createButton('OKAY', BUTTON_X, BUTTON_Y, BUTTON_WIDTH, BUTTON_HEIGHT)
+    const okayListener = ui.createListener(okayButton, async () => {
+        finished = true;
+        okayListener.remove();
+        await transitions.fade({ time: 500, from: 0.5, to: 1, render: renderGame });
+        home.start({ lastGame });
+    });
 
     const loop = () => {
         if (finished) {

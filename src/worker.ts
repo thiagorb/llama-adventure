@@ -54,6 +54,7 @@ export const work = () => {
     self.addEventListener('message', async (message) => {
         const jobId = message.data.jobId;
         const response = await handleJob(message.data);
+        // @ts-ignore
         self.postMessage({ jobId, response }, []);
     });
 };
