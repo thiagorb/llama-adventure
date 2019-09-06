@@ -187,7 +187,7 @@ export const create = async (): Promise<Level> => {
 
     const player = edges[0].entrance;
     const goal = edges[edges.length - 1].exit;
-    goal.y += 1;
+    goal.y += METERS_PER_PIXEL;
     const combinedSurface = acceptedSurfaces.reduce((acc, e) => acc.concat(e));
     const doors: Array<Door> = [];
     for (let i = 0; i < edges.length - 1; i++) {
