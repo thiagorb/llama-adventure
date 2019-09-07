@@ -21,16 +21,18 @@
             body {
                 margin: 0;
                 padding: 0;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                background: black;
             }
 
             #container {
                 display: flex;
                 justify-content: center;
                 align-content: center;
-                background: black;
                 align-items: center;
-                height: 100vh;
-                height: -webkit-fill-available;
+                height: 100%;
             }
 
             canvas {
@@ -47,7 +49,7 @@
             [data-touch-key] {
                 user-select: none;
                 display: none;
-                position: absolute;
+                position: fixed;
                 width: 80px;
                 height: 80px;
                 bottom: 10px;
@@ -67,14 +69,14 @@
                 right: 10px;
             }
 
-            .touch [data-touch-key] {
+            .is-playing.touch [data-touch-key] {
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 font-size: 30px;
             }
 
-            .touch [data-touch-key]:active {
+            [data-touch-key].is-active {
                 background: rgba(255, 255, 255, 0.2);
             }
         </style>

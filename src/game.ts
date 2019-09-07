@@ -182,6 +182,7 @@ export const loopFactory = (game: Game, animationFrame: ReturnType<typeof create
         if (game.status === Status.Playing) {
             window.requestAnimationFrame(loop);
         } else {
+            document.body.classList.remove('is-playing');
             const render = () => renderFunction(game);
             transitions.fade({ render, from: 0, to: 0.5, time: 2000 })
                 .then(() => after.start({ lastGame: game, renderGame: render }));
@@ -227,8 +228,9 @@ export const create = (level: level.Level): Game => {
     };
 };
 
-export const start = async (game: Game) => {
-    const animationFrame = createAnimationFrame(game, step, render);
-    const loop = loopFactory(game, animationFrame, render);
+export const start = async (game: Game, stepFunction = step, renderFunction = render) => {
+    document.body.classList.add('is-playing');
+    const animationFrame = createAnimationFrame(game, stepFunction, renderFunction);
+    const loop = loopFactory(game, animationFrame, renderFunction);
     await transitions.fade({ render: animationFrame, from: 1, to: 0, time: 2000 }).then(loop);
 };

@@ -51,6 +51,16 @@ export const getKeys = cachedInstance(() => {
     if (isTouchDevice()) {
         document.body.classList.add('touch');
 
+        const setActive = callback => event => {
+            (event.target as HTMLDivElement).classList.add('is-active');
+            callback(event);
+        };
+
+        const unsetActive = callback => event => {
+            (event.target as HTMLDivElement).classList.remove('is-active');
+            callback(event);
+        };
+
         const filterTouch = callback => event => {
             event.preventDefault();
             const key = (event.target as HTMLDivElement).getAttribute('data-touch-key');
@@ -59,8 +69,8 @@ export const getKeys = cachedInstance(() => {
             }
         };
 
-        document.addEventListener('touchstart', filterTouch(flagKey));
-        document.addEventListener('touchend', filterTouch(unflagKey));
+        document.addEventListener('touchstart', setActive(filterTouch(flagKey)));
+        document.addEventListener('touchend', unsetActive(filterTouch(unflagKey)));
     }
 
     return state;
