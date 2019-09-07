@@ -9,6 +9,7 @@ import {
 } from './consts';
 import * as game from './game';
 import * as level from './level';
+import * as sprites from './sprites';
 
 const enum State {
     Opening,
@@ -16,8 +17,8 @@ const enum State {
     Leaving,
     Closing,
 }
-const OPEN_TIME = Math.floor(1 * STEPS_PER_SECOND);
-const ENTER_TIME = Math.floor(1 * STEPS_PER_SECOND);
+const OPEN_TIME = Math.floor(STEPS_PER_SECOND);
+const ENTER_TIME = Math.floor(STEPS_PER_SECOND);
 
 export interface Tunnel {
     door: level.Door,
@@ -76,6 +77,8 @@ export const step = (game: game.Game) => {
                 game.tunnel.state = State.Entering;
                 game.playerLocked = true;
                 game.tunnel.transitionTime = ENTER_TIME;
+                game.player.current.speed.x = 0;
+                game.player.current.speed.y = 0;
                 break;
             case State.Entering:
                 playerPosition.x = game.tunnel.door.other.position.x + (DOOR_WIDTH - PLAYER_WIDTH) / 2;
@@ -98,26 +101,48 @@ export const step = (game: game.Game) => {
 
 export const render = (game: game.Game) => {
     for (let door of game.level.doors) {
-        context.save();
-        context.translate(door.position.x, door.position.y);
-        context.scale(DOOR_WIDTH, DOOR_HEIGHT);
-        let scale = 1;
-        if (game.tunnel && game.tunnel.door === door) {
-            context.fillStyle = 'black';
-            context.fillRect(0, 0, 1, 1);
-            const state = game.tunnel.state;
-            if (state === State.Entering || state === State.Leaving) {
-                scale = -1;
-            } else {
-                scale = Math.cos(Math.PI * game.tunnel.transitionTime / OPEN_TIME);
-                if (state === State.Opening) {
-                    scale *= -1;
-                }
+        if (!game.tunnel || game.tunnel.door !== door) {
+            sprites.draw(context, sprites.get('door'), door.position.x, door.position.y, DOOR_WIDTH, DOOR_HEIGHT);
+            continue;
+        }
+
+        context.fillStyle = 'black';
+        context.fillRect(
+            door.position.x,
+            door.position.y,
+            DOOR_WIDTH,
+            DOOR_HEIGHT
+        );
+        const state = game.tunnel.state;
+        let angle;
+        if (state === State.Entering || state === State.Leaving) {
+            angle = Math.PI;
+        } else {
+            angle = Math.PI * game.tunnel.transitionTime / OPEN_TIME;
+            if (state === State.Opening) {
+                angle = Math.PI - angle;
             }
         }
-        context.fillStyle = 'brown';
-        context.fillRect(0, 0, scale, 1);
-        context.restore();
+
+        context.fillStyle = '#876543';
+        const depth = 2 * METERS_PER_PIXEL * Math.sin(angle);
+        const width = Math.cos(angle) * DOOR_WIDTH;
+        const side = width > 0 ? 0 : 1;
+        context.fillRect(
+            door.position.x + width + depth * side,
+            door.position.y,
+            depth * (1 - 2 * side),
+            DOOR_HEIGHT
+        );
+        sprites.draw(
+            context,
+            sprites.get('door'),
+            door.position.x + depth * side,
+            door.position.y,
+            width,
+            DOOR_HEIGHT,
+            side
+        );
     }
 };
 
@@ -131,5 +156,10 @@ export const renderFade = (game: game.Game) => {
         alpha = 1 - alpha;
     }
     context.fillStyle = `rgba(0, 0, 0, ${alpha})`;
-    context.fillRect(game.tunnel.door.position.x, game.tunnel.door.position.y, DOOR_WIDTH, DOOR_HEIGHT);
+    context.fillRect(
+        game.tunnel.door.position.x,
+        game.tunnel.door.position.y,
+        DOOR_WIDTH,
+        DOOR_HEIGHT
+    );
 };

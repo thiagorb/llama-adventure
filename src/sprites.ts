@@ -50,6 +50,13 @@ const sprites = {
         height: 10,
         frames: 1,
         image: null,
+    },
+    door: {
+        url: require('../sprites/door.png'),
+        width: 16,
+        height: 20,
+        frames: 2,
+        image: null,
     }
 };
 
