@@ -55,8 +55,8 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     };
 
     const buttonsData = [
-        { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(tutorial.createGame())) },
         { label: 'PLAY GAME', handler: () => startGame(worker.createLevel().then(game.create)) },
+        { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(tutorial.createGame())) },
     ];
 
     if (lastGame && lastGame.level !== tutorial.getLevel()) {
