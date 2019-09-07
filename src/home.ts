@@ -5,6 +5,7 @@ import * as worker from './worker';
 import * as ui from './ui';
 import { BUTTON_HEIGHT, canvas, context } from './consts';
 import * as tutorial from './tutorial';
+import * as debug from './debug';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
@@ -26,7 +27,11 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
             sprites.initialize()
         ]);
 
-        game.start(newGame);
+        if (process.env.NODE_ENV === 'production') {
+            game.start(newGame);
+        } else {
+            debug.start(newGame);
+        }
     };
 
     const buttonsData = [

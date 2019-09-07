@@ -11,7 +11,8 @@ export const start = async (debugGame: game.Game) => {
         zoom: 1, //0.10655,
         highlightSurfaces: {},
         highlightRegions: {},
-        game: debugGame
+        game: debugGame,
+        timeScale: 1
     };
 
     window['debug'] = debug;
@@ -89,6 +90,7 @@ export const start = async (debugGame: game.Game) => {
     };
 
     const step = (_: game.Game, steps: number) => {
+        steps *= debug.timeScale || 1;
         stepCount += steps;
         game.step(debugGame, steps);
         if (secondInterval != null && debugGame.status !== Status.Playing) {
