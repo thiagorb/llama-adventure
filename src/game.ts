@@ -163,18 +163,25 @@ export const step = (game: Game, steps: number) => {
     }
 };
 
-export const loopFactory = (game: Game, stepFunction: typeof step, renderFunction: typeof render) => {
+export const createAnimationFrame = (game: Game, stepFunction: typeof step, renderFunction: typeof render) => {
     let stepsSinceBeginning = 0;
 
-    const loop = (timestamp: number) => {
-        const previousStatus = game.status;
-        const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
-        stepFunction(game, Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning));
-        stepsSinceBeginning = currentStep;
+    return (timestamp: number) => {
+        if (game.status === Status.Playing) {
+            const currentStep = Math.floor(timestamp / MILLISECONDS_PER_STEP);
+            stepFunction(game, Math.min(STEPS_PER_SECOND, currentStep - stepsSinceBeginning));
+            stepsSinceBeginning = currentStep;
+        }
         renderFunction(game);
+    };
+};
+
+export const loopFactory = (game: Game, animationFrame: ReturnType<typeof createAnimationFrame>, renderFunction: typeof render) => {
+    const loop = (timestamp: number) => {
+        animationFrame(timestamp);
         if (game.status === Status.Playing) {
             window.requestAnimationFrame(loop);
-        } else if (previousStatus === Status.Playing) {
+        } else {
             const render = () => renderFunction(game);
             transitions.fade({ render, from: 0, to: 0.5, time: 2000 })
                 .then(() => after.start({ lastGame: game, renderGame: render }));
@@ -221,7 +228,7 @@ export const create = (level: level.Level): Game => {
 };
 
 export const start = async (game: Game) => {
-    await transitions.fade({ render: () => render(game), from: 1, to: 0, time: 500 });
-    const loop = loopFactory(game, step, render);
-    loop(0);
+    const animationFrame = createAnimationFrame(game, step, render);
+    const loop = loopFactory(game, animationFrame, render);
+    await transitions.fade({ render: animationFrame, from: 1, to: 0, time: 2000 }).then(loop);
 };

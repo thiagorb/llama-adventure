@@ -5,7 +5,7 @@ import * as sound from './sound';
 
 (async () => {
     if (typeof document !== 'undefined') {
-        await sprites.initialize();
+        sprites.initialize();
         worker.initialize();
         worker.startSimulatedMovements();
         home.start();

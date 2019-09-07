@@ -99,7 +99,7 @@ export const start = async (debugGame: game.Game) => {
         }
     };
 
-    await transitions.fade({ render, from: 1, to: 0, time: 500 });
-    const loop = game.loopFactory(debugGame, step, render);
-    loop(0);
+    const animationFrame = game.createAnimationFrame(debugGame, step, render);
+    const loop = game.loopFactory(debugGame, animationFrame, render);
+    await transitions.fade({ render: animationFrame, from: 1, to: 0, time: 2000 }).then(loop);
 };

@@ -29,7 +29,7 @@ export const fade = (options: FadeOptions) => new Promise((resolve) => {
         if (timestamp < start + options.time) {
             requestAnimationFrame(frame);
         } else {
-            resolve();
+            resolve(timestamp);
         }
     };
 

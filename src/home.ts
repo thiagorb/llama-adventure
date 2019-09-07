@@ -1,10 +1,9 @@
-import * as transitions from './transitions';
 import * as game from './game';
-import * as sprites from './sprites';
 import * as worker from './worker';
 import * as ui from './ui';
 import { BUTTON_HEIGHT, canvas, context } from './consts';
 import * as tutorial from './tutorial';
+import * as loading from './loading';
 import * as debug from './debug';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
@@ -12,7 +11,6 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
 
     const render = () => {
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.textBaseline = 'top';
         context.fillStyle = 'white';
         context.fillText('LLAMA ADVENTURE', 120, 50);
         buttons.forEach(({ button }) => ui.drawButton(button));
@@ -21,11 +19,7 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     const startGame = async (gamePromise: Promise<game.Game>) => {
         finished = true;
         buttons.forEach(({ listener }) => listener.remove());
-        const [newGame] = await Promise.all([
-            gamePromise,
-            transitions.fade({ render, from: 0, to: 1, time: 500 }),
-            sprites.initialize()
-        ]);
+        const newGame = await loading.start(gamePromise, render);
 
         if (process.env.NODE_ENV === 'production') {
             game.start(newGame);
