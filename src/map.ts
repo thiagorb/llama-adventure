@@ -134,13 +134,13 @@ const randomizeColor = ({ r, g, b }, c) => ({
 const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
 const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 
-const simpleRender = (map: Map, canvas: HTMLCanvasElement) => {
+const simpleRender = (tiles: matrix.Matrix<Int8Array>, canvas: HTMLCanvasElement) => {
     const context = canvas.getContext('2d');
     context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
-    for (let col = 0; col < getCols(map); col++) {
+    for (let col = 0; col < matrix.getCols(tiles); col++) {
         let depth = 2;
-        for (let row = 0; row < getRows(map); row++) {
-            const tile = getCellValue(map, row, col);
+        for (let row = 0; row < matrix.getRows(tiles); row++) {
+            const tile = matrix.get(tiles, row, col);
             if (tile === TileValue.Ground) {
                 if (depth > 0) {
                     context.fillStyle = formatColor(
@@ -165,10 +165,14 @@ const simpleRender = (map: Map, canvas: HTMLCanvasElement) => {
     }
 };
 
-export const render = (map: Map) => {
+export const renderTiles = (tiles: matrix.Matrix<Int8Array>) => {
     const canvas = document.createElement('canvas');
-    canvas.width = TILE_SIZE * getCols(map) * PIXELS_PER_METER;
-    canvas.height = TILE_SIZE * getRows(map) * PIXELS_PER_METER;
-    simpleRender(map, canvas);
+    canvas.width = TILE_SIZE * matrix.getCols(tiles) * PIXELS_PER_METER;
+    canvas.height = TILE_SIZE * matrix.getRows(tiles) * PIXELS_PER_METER;
+    simpleRender(tiles, canvas);
     return canvas;
+};
+
+export const render = (map: Map) => {
+    return renderTiles(map.tiles);
 };

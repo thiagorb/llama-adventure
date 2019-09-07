@@ -1,16 +1,42 @@
 import * as game from './game';
 import * as worker from './worker';
 import * as ui from './ui';
-import { BUTTON_HEIGHT, canvas, context } from './consts';
+import { BUTTON_HEIGHT, canvas, context, SCREEN_HEIGHT, SCREEN_WIDTH } from './consts';
 import * as tutorial from './tutorial';
 import * as loading from './loading';
 import * as debug from './debug';
+import * as map from './map';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
 
-    const render = () => {
+    const background = map.renderTiles(map.randomTiles());
+    const speed = 30;
+    let mapX = -background.width / 2;
+    let mapY = -background.height / 2;
+    let direction = Math.random() * Math.PI * 2;
+    let mapSpeedX = speed * Math.cos(direction);
+    let mapSpeedY = speed * Math.sin(direction);
+    let previousTimestamp = null;
+
+    const render = (timestamp) => {
+        const elapsedSeconds = previousTimestamp === null ? 0 : (timestamp - previousTimestamp) / 1000;
+        previousTimestamp = timestamp;
         context.clearRect(0, 0, canvas.width, canvas.height);
+        context.save();
+        context.translate(mapX, mapY);
+        context.drawImage(background, 0, 0);
+        context.restore();
+        mapX += mapSpeedX * elapsedSeconds;
+        mapY += mapSpeedY * elapsedSeconds;
+        if (mapX + mapSpeedX > 0 || mapX + mapSpeedX < -background.width + SCREEN_WIDTH) {
+            mapSpeedX = -mapSpeedX;
+        }
+        if (mapY + mapSpeedY > 0 || mapY + mapSpeedY < -background.height + SCREEN_HEIGHT) {
+            mapSpeedY = -mapSpeedY;
+        }
+        context.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = 'white';
         context.fillText('LLAMA ADVENTURE', 120, 50);
         buttons.forEach(({ button }) => ui.drawButton(button));
@@ -45,15 +71,15 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         })
     });
 
-    const loop = () => {
+    const loop = (timestamp) => {
         if (finished) {
             return;
         }
 
-        render();
+        render(timestamp);
 
         requestAnimationFrame(loop);
     };
 
-    loop();
+    requestAnimationFrame(loop);
 };

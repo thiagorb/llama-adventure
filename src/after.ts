@@ -26,8 +26,8 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
             context.fillText('BROUGHT YOUR ITEMS BACK.', LEFT, TOP + 50);
         } else {
             context.fillText('OUCH!', LEFT, TOP);
-            context.fillText("UNFORTUNATELY YOU DIDN'T", LEFT, TOP + 30);
-            context.fillText("MANAGE TO REACH YOUR HOME.", LEFT, TOP + 50);
+            context.fillText("YOU DIDN'T MANAGE", LEFT, TOP + 30);
+            context.fillText("TO COME BACK HOME.", LEFT, TOP + 50);
         }
 
         ui.drawButton(okayButton);
