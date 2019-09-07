@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "serve": "webpack serve",
-    "build": "NODE_ENV=production webpack --mode production ; (cd dist; tar -cvf - *) | gzip --best > build.tar.gz ; echo Package size: $(echo scale=2\\; $(wc -c < build.tar.gz) / 1024 | bc)Kb"
+    "build": "./build.sh"
   },
   "author": "",
   "license": "ISC",
