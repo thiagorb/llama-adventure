@@ -28,7 +28,7 @@ import { context, PIXELS_PER_METER, TILE_SIZE } from './consts';
     const rendered = map.render(testMap);
     context.drawImage(rendered, 0, 0);
 
-    const surfaces = await findSurfaces(testMap);
+    const surfaces = findSurfaces(testMap);
 
     context.fillStyle = 'rgba(128, 0, 128, 0.5)';
     context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);

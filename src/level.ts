@@ -160,10 +160,10 @@ export const calculateRegions = (levelMap: map.Map): RegionsMap => {
     };
 };
 
-export const create = async (): Promise<Level> => {
+export const create = (): Level => {
     const MIN_SURFACE_SIZE = 100;
     const levelMap = map.create(map.randomTiles());
-    const surfaces = await simulation.findSurfaces(levelMap);
+    const surfaces = simulation.findSurfaces(levelMap);
     const regions = calculateRegions(levelMap);
 
     const acceptedSurfaces = surfaces.filter(surface => surface.length >= MIN_SURFACE_SIZE);

@@ -7,7 +7,7 @@ import * as sound from './sound';
     if (typeof document !== 'undefined') {
         await sprites.initialize();
         worker.initialize();
-        worker.getSimulatedMovements();
+        worker.startSimulatedMovements();
         home.start();
 
         const container = document.getElementById('container');

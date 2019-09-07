@@ -11,6 +11,7 @@ import * as player from './player';
 import * as map from './map';
 import * as matrix from './matrix';
 import * as worker from './worker';
+import { cachedInstance } from './utils';
 
 interface BoundingBox {
     rowTop: number;
@@ -48,7 +49,10 @@ interface FoundMovementsPath {
     sequence: Map<string, FoundMovementsPath>;
 }
 
-export const simulateMovements = (): Array<Array<BoundingBox>> => {
+export const getSimulatedMovements = cachedInstance((): Array<Array<BoundingBox>> => {
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(new Date(), 'start simulation');
+    }
     const foundMovements = new Map<string, FoundMovementsPath>();
     const REACTION_TIME = 0.15 * STEPS_PER_SECOND;
 
@@ -127,16 +131,19 @@ export const simulateMovements = (): Array<Array<BoundingBox>> => {
     };
     transformMovements(foundMovements, []);
 
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(new Date(), 'end simulation');
+    }
     return movements;
-};
+});
 
-export const findSurfaces = async (levelMap: map.Map): Promise<Array<Array<map.Cell>>> => {
+export const findSurfaces = (levelMap: map.Map): Array<Array<map.Cell>> => {
     const possibleMovements: Array<Array<BoundingBox>> = [
         [getBoundingBox({x: TILE_SIZE, y: 0})],
         [getBoundingBox({x: -TILE_SIZE, y: 0})],
         [getBoundingBox({x: 0, y: -TILE_SIZE}), getBoundingBox({x: TILE_SIZE, y: -TILE_SIZE})],
         [getBoundingBox({x: 0, y: -TILE_SIZE}), getBoundingBox({x: -TILE_SIZE, y: -TILE_SIZE})],
-        ...(await worker.getSimulatedMovements()),
+        ...getSimulatedMovements(),
     ];
 
     const possibleNeighbors = new Map<string, { row: number, col: number, movements: Set<Array<BoundingBox>> }>();

@@ -39,12 +39,14 @@ const start = (job: JobType): Promise<any> => {
     return handleJob({ job });
 };
 
-export const getSimulatedMovements = () => start(JobType.SimulateMovements);
+export const startSimulatedMovements = () => start(JobType.SimulateMovements);
 export const createLevel = (): Promise<level.Level> => start(JobType.CreateLevel);
 
 const handleJob = (() => {
     const handlers = new Map();
-    handlers.set(JobType.SimulateMovements, cachedInstance(() => simulation.simulateMovements()));
+    handlers.set(JobType.SimulateMovements, () => {
+        simulation.getSimulatedMovements();
+    });
     handlers.set(JobType.CreateLevel, level.create);
 
     return ({ job }) => handlers.get(job)();
