@@ -126,7 +126,7 @@ const checkItemsCollection = (game: Game) => {
             continue;
         }
 
-        sound.playCollectSound();
+        sound.play('collect');
         game.collectedItems[i] = true;
         game.score += item.score;
     }
@@ -145,20 +145,22 @@ export const step = (game: Game, steps: number) => {
         tunnel.step(game);
         player.update(game.playerLocked ? lockedKeys : getKeys(), game.player.current, game.player.next);
         collision.playerGroundCollision(game.level.map, game.player.next);
-        if (collision.playerSpikeCollision(game.level.map, game.player.next)) {
+        if (game.status !== Status.Lost && collision.playerSpikeCollision(game.level.map, game.player.next)) {
             game.status = Status.Lost;
+            sound.play('lose');
         }
 
         if (game.player.current.speed.y >= 0 && game.player.next.speed.y < 0) {
-            sound.playJumpSound();
+            sound.play('jump');
         }
 
         let temp = game.player.next;
         game.player.next = game.player.current;
         game.player.current = temp;
 
-        if (reachedGoal(game)) {
+        if (game.status !== Status.Won && reachedGoal(game)) {
             game.status = Status.Won;
+            sound.play('win');
         }
     }
 };

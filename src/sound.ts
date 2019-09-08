@@ -1,6 +1,11 @@
 import { cachedInstance } from './utils';
 
 const enum Notes {
+    C3 = 130.81,
+    Db3 = 138.59,
+    D3 = 146.83,
+    Eb3 = 155.56,
+    C4 = 261.63,
     G4 = 392,
     C5 = 523.25,
     G5 = 783.99,
@@ -25,24 +30,6 @@ export const getAudio = cachedInstance((): AudioContext => {
 
     return null;
 });
-
-const jumpSound = (oscillator, gain, audio) => {
-    oscillator.frequency.setValueAtTime(Notes.G4, audio.currentTime);
-    oscillator.frequency.linearRampToValueAtTime(Notes.G5, audio.currentTime + 0.25);
-    gain.gain.setValueAtTime(0, audio.currentTime);
-    gain.gain.linearRampToValueAtTime(1, audio.currentTime + 0.01);
-    gain.gain.linearRampToValueAtTime(0, audio.currentTime + 0.25);
-};
-
-const collectSound = (oscillator, gain, audio) => {
-    oscillator.frequency.setValueAtTime(Notes.C5, audio.currentTime);
-    oscillator.frequency.setValueAtTime(Notes.C7, audio.currentTime + 0.12);
-    gain.gain.setValueAtTime(0, audio.currentTime);
-    gain.gain.linearRampToValueAtTime(1, audio.currentTime + 0.04);
-    gain.gain.linearRampToValueAtTime(0, audio.currentTime + 0.8);
-    gain.gain.linearRampToValueAtTime(1, audio.currentTime + 0.12);
-    gain.gain.linearRampToValueAtTime(0, audio.currentTime + 0.5);
-};
 
 const getSoundPlayer = cachedInstance(() => {
     const audio = getAudio();
@@ -80,6 +67,69 @@ const getSoundPlayer = cachedInstance(() => {
     }
 });
 
-export const playJumpSound = () => getSoundPlayer()(jumpSound);
+const sounds: { [key: string]: SoundPlayer } = {
+    jump: (oscillator, gain, audio) => {
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(Notes.G4, audio.currentTime);
+        oscillator.frequency.linearRampToValueAtTime(Notes.G5, audio.currentTime + 0.25);
+        gain.gain.setValueAtTime(0, audio.currentTime);
+        gain.gain.linearRampToValueAtTime(1, audio.currentTime + 0.01);
+        gain.gain.linearRampToValueAtTime(0, audio.currentTime + 0.25);
+    },
 
-export const playCollectSound = () => getSoundPlayer()(collectSound);
+    collect: (oscillator, gain, audio) => {
+        oscillator.type = 'sine';
+        notePlayer.start(oscillator, gain, audio);
+        notePlayer.play(Notes.C5, 0.06, 0.00, 0.02, 0.3);
+        notePlayer.play(Notes.C7, 0.05, 0, 0.4, 0.7);
+    },
+
+    win: (oscillator, gain, audio) => {
+        oscillator.type = 'sawtooth';
+        notePlayer.start(oscillator, gain, audio);
+        notePlayer.play(Notes.C4, 0.1, 0.1, 0.2, 0.5);
+        notePlayer.play(Notes.C4, 0.1, 0, 0.1, 0.5);
+        notePlayer.play(Notes.G4, 0.1, 0.2, 0.8, 0.5);
+    },
+
+    lose: (oscillator, gain, audio) => {
+        oscillator.type = 'sawtooth';
+        notePlayer.start(oscillator, gain, audio);
+        notePlayer.play(Notes.Eb3, 0.3, 0, 0.2, 0.4);
+        notePlayer.play(Notes.D3, 0.3, 0, 0.2, 0.4);
+        notePlayer.play(Notes.Db3, 0.3, 0, 0.2, 0.4);
+        notePlayer.play(Notes.C3, 0.3, 0, 0.8, 0.4);
+    },
+};
+
+const notePlayer = {
+    currentTime: 0,
+
+    gain: null,
+
+    oscillator: null,
+
+    start (oscillator, gain, audio) {
+        this.currentTime = audio.currentTime;
+        this.oscillator = oscillator;
+        this.gain = gain;
+    },
+
+    pause (time: number) {
+        this.currentTime += time;
+    },
+
+    play (frequency: number, attack: number, sustain: number, decay: number, gain: number = 1) {
+        const attackEnd = this.currentTime + attack;
+        const sustainEnd = attackEnd + sustain;
+        const decayEnd = sustainEnd + decay;
+        this.oscillator.frequency.setValueAtTime(frequency, this.currentTime);
+        this.gain.gain.linearRampToValueAtTime(gain, attackEnd);
+        this.gain.gain.linearRampToValueAtTime(gain, sustainEnd);
+        this.gain.gain.linearRampToValueAtTime(0, decayEnd);
+        this.currentTime = decayEnd;
+    }
+};
+
+export const play = (sound: keyof typeof sounds) => getSoundPlayer()(sounds[sound]);
+
