@@ -1,8 +1,6 @@
 import * as game from './game';
-import { Status } from './game';
 import * as matrix from './matrix';
 import { canvas, context, TILE_SIZE } from './consts';
-import * as transitions from './transitions';
 
 export const start = async (debugGame: game.Game) => {
 
@@ -79,12 +77,10 @@ export const start = async (debugGame: game.Game) => {
 
         context.restore();
 
-        context.font = '10px sans-serif';
-        context.fillStyle = 'white';
-        context.fillText(`SCORE: ${debugGame.score}`, 5, 10);
+        game.renderText(debugGame);
+        context.textAlign = 'left';
         context.fillText(sps.toString(), 5, 20);
         context.fillText(fps.toString(), 5, 30);
-
 
         frameCount++;
     };
@@ -93,7 +89,7 @@ export const start = async (debugGame: game.Game) => {
         steps *= debug.timeScale || 1;
         stepCount += steps;
         game.step(debugGame, steps);
-        if (secondInterval != null && debugGame.status !== Status.Playing) {
+        if (secondInterval != null && debugGame.status !== game.Status.Playing) {
             clearInterval(secondInterval);
             secondInterval = null;
         }

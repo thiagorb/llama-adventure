@@ -1,5 +1,6 @@
 import * as matrix from './matrix';
 import * as sprites from './sprites';
+import * as random from './random';
 
 import {
     PIXELS_PER_METER, PLAYER_COL_WIDTH,
@@ -76,7 +77,8 @@ export const collidesWithHorizontalSegment = (map: Map, y: number, x1: number, x
     return false;
 };
 
-export const randomTiles = () => {
+export const randomTiles = (randomizer: random.Randomizer) => {
+
     const initialChance = 0.3;
     const birthLimit = 6;
     const deathLimit = 5;
@@ -85,7 +87,7 @@ export const randomTiles = () => {
     const rows = 100;
     const cols = 300;
 
-    let tiles = matrix.create(Int8Array, rows, cols, () => Math.random() < initialChance ? TileValue.Ground : TileValue.Empty);
+    let tiles = matrix.create(Int8Array, rows, cols, () => random.get(randomizer) < initialChance ? TileValue.Ground : TileValue.Empty);
     let next = matrix.create(Int8Array, rows, cols, () => TileValue.Empty);
 
     for (let step = 0; step < numberOfSteps; step++) {
@@ -118,23 +120,27 @@ export const randomTiles = () => {
 };
 
 const isSolidValue = value => value > 0;
-export const isSolidPosition = (map: Map, x, y) => isSolidValue(getPositionValue(map, x, y));
+
 export const isSolidCell = (map: Map, row, col) =>
     !matrix.has(map.tiles, row, col) ||
     isSolidValue(getCellValue(map, row, col));
 
 export const setSpike = (map: Map, row, col) => matrix.set(map.tiles, row, col, TileValue.Spike);
 
-const randomizeValue = (e, c) => Math.max(0, Math.min(255, e + Math.random() * c));
-const randomizeColor = ({ r, g, b }, c) => ({
-    r: randomizeValue(r, c),
-    g: randomizeValue(g, c),
-    b: randomizeValue(b, c),
+const randomizeValue = (randomizer: random.Randomizer, e, c) => Math.max(
+    0,
+    Math.min(255, e + random.get(randomizer) * c)
+);
+
+const randomizeColor = (randomizer: random.Randomizer, { r, g, b }, c) => ({
+    r: randomizeValue(randomizer, r, c),
+    g: randomizeValue(randomizer, g, c),
+    b: randomizeValue(randomizer, b, c),
 });
-const brightness = ({ r, g, b }, c) => ({ r: r * c, g: g * c, b: b * c });
+
 const formatColor = ({ r, g, b }) => `rgb(${r}, ${g}, ${b})`;
 
-const simpleRender = (tiles: matrix.Matrix<Int8Array>, canvas: HTMLCanvasElement) => {
+const simpleRender = (tiles: matrix.Matrix<Int8Array>, canvas: HTMLCanvasElement, randomizer: random.Randomizer) => {
     const context = canvas.getContext('2d');
     context.scale(TILE_SIZE * PIXELS_PER_METER, TILE_SIZE * PIXELS_PER_METER);
     for (let col = 0; col < matrix.getCols(tiles); col++) {
@@ -144,10 +150,10 @@ const simpleRender = (tiles: matrix.Matrix<Int8Array>, canvas: HTMLCanvasElement
             if (tile === TileValue.Ground) {
                 if (depth > 0) {
                     context.fillStyle = formatColor(
-                        randomizeColor({ r: 120, g: 69, b: 20 }, 10)
+                        randomizeColor(randomizer, { r: 120, g: 69, b: 20 }, 10)
                     );
                 } else {
-                    context.fillStyle = formatColor(randomizeColor({ r: 51, g: 137, b: 49 }, 15));
+                    context.fillStyle = formatColor(randomizeColor(randomizer, { r: 51, g: 137, b: 49 }, 15));
                 }
                 context.fillRect(col, row, 1, 1);
                 depth++;
@@ -165,14 +171,14 @@ const simpleRender = (tiles: matrix.Matrix<Int8Array>, canvas: HTMLCanvasElement
     }
 };
 
-export const renderTiles = (tiles: matrix.Matrix<Int8Array>) => {
+export const renderTiles = (tiles: matrix.Matrix<Int8Array>, randomizer: random.Randomizer) => {
     const canvas = document.createElement('canvas');
     canvas.width = TILE_SIZE * matrix.getCols(tiles) * PIXELS_PER_METER;
     canvas.height = TILE_SIZE * matrix.getRows(tiles) * PIXELS_PER_METER;
-    simpleRender(tiles, canvas);
+    simpleRender(tiles, canvas, randomizer);
     return canvas;
 };
 
-export const render = (map: Map) => {
-    return renderTiles(map.tiles);
+export const render = (map: Map, randomizer: random.Randomizer) => {
+    return renderTiles(map.tiles, randomizer);
 };

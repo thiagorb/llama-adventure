@@ -6,11 +6,14 @@ import * as tutorial from './tutorial';
 import * as loading from './loading';
 import * as debug from './debug';
 import * as map from './map';
+import * as random from './random';
+import * as level from './level';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
 
-    const background = map.renderTiles(map.randomTiles());
+    const randomizer = random.create(Math.random() * level.MAX_LEVEL_ID);
+    const background = map.renderTiles(map.randomTiles(randomizer), randomizer);
     const speed = 30;
     let mapX = -background.width / 2;
     let mapY = -background.height / 2;
@@ -38,7 +41,8 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = 'white';
-        context.fillText('LLAMA ADVENTURE', 120, 50);
+        context.textAlign = 'center';
+        context.fillText('LLAMA ADVENTURE', 160, 50);
         buttons.forEach(({ button }) => ui.drawButton(button));
     };
 
@@ -55,7 +59,7 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     };
 
     const buttonsData = [
-        { label: 'PLAY GAME', handler: () => startGame(worker.createLevel().then(game.create)) },
+        { label: 'PLAY GAME', handler: () => startGame(worker.createLevel(Math.random() * level.MAX_LEVEL_ID).then(game.create)) },
         { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(tutorial.createGame())) },
     ];
 
@@ -64,7 +68,7 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     }
 
     const buttons = buttonsData.map((buttonData, index) => {
-        const button = ui.createButton(buttonData.label, 120, 100 + index * 30, 100, BUTTON_HEIGHT);
+        const button = ui.createButton(buttonData.label, 110, 100 + index * 30, 100, BUTTON_HEIGHT);
         return ({
             button,
             listener: ui.createListener(button, buttonData.handler),

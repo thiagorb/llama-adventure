@@ -59,6 +59,15 @@ export const centerPlayer = (game: Game) => {
     );
 };
 
+export const renderText = (game: Game) => {
+    context.font = '10px sans-serif';
+    context.fillStyle = 'white';
+    context.textAlign = 'left';
+    context.fillText(`SCORE: ${game.score}`, 5, 10);
+    context.textAlign = 'right';
+    context.fillText(`WORLD #${game.level.id}`, 315, 10);
+};
+
 export const render = (game: Game) => {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -68,10 +77,7 @@ export const render = (game: Game) => {
     centerPlayer(game);
     renderWorld(game);
     context.restore();
-
-    context.font = '10px sans-serif';
-    context.fillStyle = 'white';
-    context.fillText(`SCORE: ${game.score}`, 5, 10);
+    renderText(game);
 };
 
 const distance2 = (p1: state.Vector2D, p2: state.Vector2D) => {
@@ -221,7 +227,7 @@ export const create = (level: level.Level): Game => {
             next: deepCopy(current)
         },
         level,
-        renderedMap: map.render(level.map),
+        renderedMap: map.render(level.map, deepCopy(level.randomizer)),
         collectedItems: level.items.map(() => false),
         score: 0,
         status: Status.Playing,

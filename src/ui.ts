@@ -20,7 +20,8 @@ export const drawButton = (button: Button) => {
     context.fillStyle = '#444';
     context.fillRect(button.x, button.y, button.width, button.height);
     context.fillStyle = 'white';
-    context.fillText(button.label, button.x + 10, button.y + 5);
+    context.textAlign = 'center';
+    context.fillText(button.label, button.x + button.width / 2, button.y + 5);
 };
 
 export const mapClickCoordinates = callback => {

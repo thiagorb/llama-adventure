@@ -2,7 +2,8 @@ import * as map from './map';
 import * as matrix from './matrix';
 import * as level from './level';
 import * as game from './game';
-import { METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
+import * as random from './random';
+import { context, METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
 import { cachedInstance } from './utils';
 
 export const getLevel = cachedInstance((): level.Level => {
@@ -47,6 +48,7 @@ export const getLevel = cachedInstance((): level.Level => {
     other.other = door;
 
     return {
+        id: -1,
         map: tutorialMap,
         surfaces: null,
         regions: null,
@@ -58,6 +60,7 @@ export const getLevel = cachedInstance((): level.Level => {
             level.createItem(level.ItemType.Pepper, 60, playerY),
             level.createItem(level.ItemType.Cactus, 68, playerY),
         ],
+        randomizer: random.create(0)
     };
 });
 
@@ -66,6 +69,7 @@ export const createGame = () => {
     const context = tutorialGame.renderedMap.getContext('2d');
     context.fillStyle = 'white';
     context.resetTransform();
+    context.textAlign = 'left';
     context.fillText('← OR "A" TO MOVE LEFT', 20, 140);
     context.fillText('→ OR "D" TO MOVE RIGHT', 20, 155);
     context.fillText('CONTINUE TO THE RIGHT →', 20, 180);

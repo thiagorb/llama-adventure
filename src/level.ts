@@ -4,6 +4,9 @@ import * as matrix from './matrix';
 import * as sprites from './sprites';
 import * as simulation from './simulation';
 import * as state from './state';
+import * as random from './random';
+
+export const MAX_LEVEL_ID = 999999;
 
 export interface Tunnel {
     readonly entrance: state.Vector2D;
@@ -23,6 +26,7 @@ export interface RegionsMap {
 type Surface = Array<map.Cell>;
 
 export interface Level {
+    readonly id: number;
     readonly map: map.Map;
     readonly items: Array<Item>;
     readonly player: state.Vector2D;
@@ -30,6 +34,7 @@ export interface Level {
     readonly surfaces: Array<Surface>;
     readonly regions: RegionsMap;
     readonly doors: Array<Door>;
+    readonly randomizer: random.Randomizer;
 }
 
 export interface Item extends state.Object {
@@ -39,25 +44,27 @@ export interface Item extends state.Object {
     readonly score: number;
 }
 
-const randomCell = (surface: Surface): map.Cell => surface[Math.floor(Math.random() * surface.length)];
+const randomCell = (randomizer: random.Randomizer, surface: Surface): map.Cell =>
+    surface[Math.floor(random.get(randomizer) * surface.length)];
+
 const cellPosition = (cell: map.Cell): state.Vector2D => ({
     x: cell.col * TILE_SIZE,
     y: cell.row * TILE_SIZE,
 });
 
-const randomizePositions = (surface: Surface): Tunnel => {
+const randomizePositions = (randomizer: random.Randomizer, surface: Surface): Tunnel => {
     const cols = surface.map(r => r.col).sort();
     const medianCol = cols[Math.ceil(cols.length / 2)];
     const leftSide = surface.filter(({ col }) => col < medianCol);
     const rightSide = surface.filter(({ col }) => col >= medianCol);
-    const entranceLeft = Math.random() < 0.5;
+    const entranceLeft = random.get(randomizer) < 0.5;
     const entranceSide = entranceLeft ? leftSide : rightSide;
     const exitSide = entranceLeft ? rightSide: leftSide;
 
     let best = null;
     for (let attempt = 0; attempt < 10; attempt++) {
-        const entrance = randomCell(entranceSide);
-        const exit = randomCell(exitSide);
+        const entrance = randomCell(randomizer, entranceSide);
+        const exit = randomCell(randomizer, exitSide);
         const dy = entrance.row - exit.row;
         const dx = entrance.col - exit.col;
         const distance2 = dy * dy + dx * dx;
@@ -106,12 +113,12 @@ export const enum ItemType {
     Cactus
 }
 
-const randomizeItems = (surface: Surface): Array<Item> => {
+const randomizeItems = (randomizer: random.Randomizer, surface: Surface): Array<Item> => {
     const items: Array<Item> = [];
 
     for (let i = 0; i < surface.length; i += 5) {
         const cell = surface[Math.floor(i)];
-        const type = Math.floor(Math.pow(Math.random(), 3) * 3);
+        const type = Math.floor(Math.pow(random.get(randomizer), 3) * 3);
         items.push(createItem(type, cell.col * TILE_SIZE, cell.row * TILE_SIZE));
     }
     return items.sort((a, b) => a.position.x - b.position.x);
@@ -160,9 +167,11 @@ export const calculateRegions = (levelMap: map.Map): RegionsMap => {
     };
 };
 
-export const create = (): Level => {
+export const create = (id: number): Level => {
+    id = Math.floor(id);
     const MIN_SURFACE_SIZE = 100;
-    const levelMap = map.create(map.randomTiles());
+    const randomizer = random.create(id);
+    const levelMap = map.create(map.randomTiles(randomizer));
     const surfaces = simulation.findSurfaces(levelMap);
     const regions = calculateRegions(levelMap);
 
@@ -181,7 +190,7 @@ export const create = (): Level => {
 
     for (let [region, surfaces] of surfaceByRegion) {
         for (let surface of surfaces) {
-            edges.push(randomizePositions(surface));
+            edges.push(randomizePositions(randomizer, surface));
         }
     }
 
@@ -212,12 +221,14 @@ export const create = (): Level => {
     }
 
     return {
+        id,
         map: levelMap,
-        items: randomizeItems(combinedSurface),
+        items: randomizeItems(randomizer, combinedSurface),
         surfaces,
         regions,
         player,
         goal,
         doors,
+        randomizer,
     };
 };

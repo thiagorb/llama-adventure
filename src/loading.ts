@@ -12,6 +12,7 @@ export const start = async (promise: Promise<any>, previousRender) => {
         context.fillStyle = 'white';
 
         const dot = dots[Math.floor(timestamp / 500) % dots.length];
+        context.textAlign = 'left';
         context.fillText(`LOADING${dot}`, 135, 110);
         const llama = sprites.get('llama');
         const llamaFrame = Math.floor(timestamp / 300) % llama.frames;

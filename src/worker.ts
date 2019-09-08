@@ -26,21 +26,20 @@ export const initialize = () => {
     worker.addEventListener('message', handleMessage);
 };
 
-const start = (job: JobType): Promise<any> => {
+const start = (job: JobType, ...params): Promise<any> => {
     if (worker) {
         return new Promise((resolve) => {
-
             const jobId = nextJobId++;
             pendingJobs.set(jobId, { resolve });
-            worker.postMessage({ jobId, job });
+            worker.postMessage({ jobId, job, params });
         });
     }
 
-    return handleJob({ job });
+    return handleJob({ job, params });
 };
 
 export const startSimulatedMovements = () => start(JobType.SimulateMovements);
-export const createLevel = (): Promise<level.Level> => start(JobType.CreateLevel);
+export const createLevel = (id: number): Promise<level.Level> => start(JobType.CreateLevel, id);
 
 const handleJob = (() => {
     const handlers = new Map();
@@ -49,7 +48,7 @@ const handleJob = (() => {
     });
     handlers.set(JobType.CreateLevel, level.create);
 
-    return ({ job }) => handlers.get(job)();
+    return ({ job, params }) => handlers.get(job)(...params);
 })();
 
 export const work = () => {

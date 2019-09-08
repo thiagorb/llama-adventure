@@ -20,6 +20,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
 
         context.textBaseline = 'top';
         context.fillStyle = 'white';
+        context.textAlign = 'left';
         if (lastGame.status === Status.Won) {
             context.fillText('CONGRATULATIONS!', LEFT, TOP);
             context.fillText('YOU ARRIVED HOME SAFELY AND', LEFT, TOP + 30);
