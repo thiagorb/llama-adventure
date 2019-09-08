@@ -8,6 +8,9 @@ import * as debug from './debug';
 import * as map from './map';
 import * as random from './random';
 import * as level from './level';
+import * as highscore from './highscore';
+import * as transitions from './transitions';
+import { fade } from './transitions';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
@@ -22,7 +25,7 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     let mapSpeedY = speed * Math.sin(direction);
     let previousTimestamp = null;
 
-    const render = (timestamp) => {
+    const renderBackground = timestamp => {
         const elapsedSeconds = previousTimestamp === null ? 0 : (timestamp - previousTimestamp) / 1000;
         previousTimestamp = timestamp;
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -38,6 +41,10 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         if (mapY + mapSpeedY > 0 || mapY + mapSpeedY < -background.height + SCREEN_HEIGHT) {
             mapSpeedY = -mapSpeedY;
         }
+    };
+
+    const render = (timestamp) => {
+        renderBackground(timestamp);
         context.fillStyle = 'rgba(0, 0, 0, 0.5)';
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = 'white';
@@ -61,6 +68,17 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     const buttonsData = [
         { label: 'PLAY GAME', handler: () => startGame(worker.createLevel(Math.random() * level.MAX_LEVEL_ID).then(game.create)) },
         { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(tutorial.createGame())) },
+        {
+            label: 'HIGH SCORE',
+            handler: async () => {
+                finished = true;
+                await transitions.fade({ render: renderBackground, from: 0.5, to: 0, time: 500 });
+                highscore.start(renderBackground, () => {
+                    finished = false;
+                    fadeIn();
+                });
+            },
+        },
     ];
 
     if (lastGame && lastGame.level !== tutorial.getLevel()) {
@@ -85,5 +103,10 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         requestAnimationFrame(loop);
     };
 
-    requestAnimationFrame(loop);
+
+    const fadeIn = () => {
+        transitions.fade({ time: 300, from: 0, to: 0.5, render: renderBackground }).then(loop);
+    };
+
+    fadeIn();
 };
