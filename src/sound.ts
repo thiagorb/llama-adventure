@@ -81,15 +81,15 @@ const sounds: { [key: string]: SoundPlayer } = {
         oscillator.type = 'sine';
         notePlayer.start(oscillator, gain, audio);
         notePlayer.play(Notes.C5, 0.06, 0.00, 0.02, 0.3);
-        notePlayer.play(Notes.C7, 0.05, 0, 0.4, 0.7);
+        notePlayer.play(Notes.C7, 0.05, 0, 0.4, 0.5);
     },
 
     win: (oscillator, gain, audio) => {
         oscillator.type = 'sawtooth';
         notePlayer.start(oscillator, gain, audio);
-        notePlayer.play(Notes.C4, 0.1, 0.1, 0.2, 0.5);
         notePlayer.play(Notes.C4, 0.1, 0, 0.1, 0.5);
-        notePlayer.play(Notes.G4, 0.1, 0.2, 0.8, 0.5);
+        notePlayer.play(Notes.C4, 0.05, 0, 0.05, 0.5);
+        notePlayer.play(Notes.G4, 0.1, 0, 0.8, 0.5);
     },
 
     lose: (oscillator, gain, audio) => {
