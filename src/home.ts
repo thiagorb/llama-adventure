@@ -12,7 +12,7 @@ import * as level from './level';
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
 
-    const randomizer = random.create(Math.random() * level.MAX_LEVEL_ID);
+    const randomizer = random.create(Math.floor(Math.random() * (level.MAX_LEVEL_ID + 1)));
     const background = map.renderTiles(map.randomTiles(randomizer), randomizer);
     const speed = 30;
     let mapX = -background.width / 2;

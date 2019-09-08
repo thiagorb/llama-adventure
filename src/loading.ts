@@ -2,7 +2,7 @@ import { canvas, context, SCREEN_WIDTH } from './consts';
 import * as transitions from './transitions';
 import * as sprites from './sprites';
 
-export const start = async (promise: Promise<any>, previousRender) => {
+export const start = async (promise: Promise<any>, previousRender = null) => {
     let finished = false;
 
     const dots = ['', '.', '..', '...'];
@@ -29,7 +29,9 @@ export const start = async (promise: Promise<any>, previousRender) => {
         requestAnimationFrame(loop);
     };
 
-    await transitions.fade({ render: previousRender, from: 0, to: 1, time: 500 });
+    if (previousRender) {
+        await transitions.fade({ render: previousRender, from: 0, to: 1, time: 500 });
+    }
     await sprites.initialize();
     await transitions.fade({ render, from: 1, to: 0, time: 500 });
     requestAnimationFrame(loop);
