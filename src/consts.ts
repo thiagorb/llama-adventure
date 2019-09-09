@@ -21,4 +21,8 @@ export const PLAYER_COL_WIDTH = map.getCol(PLAYER_WIDTH - METERS_PER_PIXEL);
 export const SPIKE_GAP = 2 * METERS_PER_PIXEL;
 export const canvas = typeof document !== 'undefined' && document.querySelector('canvas');
 export const context = canvas && canvas.getContext('2d');
-context && (context.imageSmoothingEnabled = false, context.textBaseline = 'top');
+context && (
+    context.imageSmoothingEnabled = false,
+    context.textBaseline = 'top',
+    context.font = '10px/12px sans-serif'
+);

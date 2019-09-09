@@ -3,7 +3,7 @@ import * as matrix from './matrix';
 import * as level from './level';
 import * as game from './game';
 import * as random from './random';
-import { METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
+import { context, METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
 import { cachedInstance } from './utils';
 
 export const LEVEL_ID = -1;
@@ -69,6 +69,7 @@ export const getLevel = cachedInstance((): level.Level => {
 export const createGame = () => {
     const tutorialGame = game.create(getLevel());
     const context = tutorialGame.renderedMap.getContext('2d');
+    context.font = '10px/12px sans-serif';
     context.fillStyle = 'white';
     context.resetTransform();
     context.textAlign = 'left';

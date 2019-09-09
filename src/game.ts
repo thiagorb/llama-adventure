@@ -61,7 +61,6 @@ export const centerPlayer = (game: Game) => {
 };
 
 export const renderText = (game: Game) => {
-    context.font = '10px sans-serif';
     context.fillStyle = 'white';
     context.textAlign = 'left';
     context.fillText(`SCORE: ${game.score}`, 5, 5);
