@@ -8,7 +8,7 @@ import * as home from './home';
 export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGame: () => void }) => {
     let finished = false;
     const time = Math.floor(lastGame.time);
-    const timeBonus = Math.floor(5000 / Math.log(100 + time));
+    const timeBonus = lastGame.status === game.Status.Won ? Math.floor(5000 / Math.log(100 + time)) : 0;
     const score = lastGame.score + timeBonus;
 
     const isHighscore = highscore
@@ -76,11 +76,15 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
         context.fillText('SCORE', 160, 15);
         context.textAlign = 'left';
         context.fillText('COLLECTED ITEMS', 70, 35);
-        context.fillText('TIME BONUS', 70, 50);
+        if (timeBonus) {
+            context.fillText('TIME BONUS', 70, 50);
+        }
         context.fillText('TOTAL', 70, 75);
         context.textAlign = 'right';
         context.fillText(<any>lastGame.score, 240, 35);
-        context.fillText(<any>timeBonus, 240, 50);
+        if (timeBonus) {
+            context.fillText(<any>timeBonus, 240, 50);
+        }
         context.fillText(<any>score, 240, 75);
 
         ui.drawButton(okayButton);
