@@ -9,6 +9,7 @@ import * as map from './map';
 import * as random from './random';
 import * as level from './level';
 import * as highscore from './highscore';
+import * as select from './select';
 import * as transitions from './transitions';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
@@ -52,9 +53,13 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         buttons.forEach(({ button }) => ui.drawButton(button));
     };
 
-    const startGame = async (gamePromise: Promise<game.Game>) => {
+    const finish = () => {
         finished = true;
         buttons.forEach(({ listener }) => listener.remove());
+    };
+
+    const startGame = async (gamePromise: Promise<game.Game>) => {
+        finish();
         const newGame = await loading.start(gamePromise, render);
 
         if (process.env.NODE_ENV === 'production') {
@@ -66,6 +71,13 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
 
     const buttonsData = [
         { label: 'PLAY GAME', handler: () => startGame(worker.createLevel(Math.random() * level.MAX_LEVEL_ID).then(game.create)) },
+        {
+            label: 'SELECT WORLD',
+            handler: () => {
+                finish();
+                select.start(renderBackground);
+            }
+        },
         { label: 'TUTORIAL', handler: () => startGame(Promise.resolve(tutorial.createGame())) },
         {
             label: 'HIGH SCORE',

@@ -2,7 +2,7 @@ import { canvas, context, SCREEN_WIDTH } from './consts';
 import * as transitions from './transitions';
 import * as sprites from './sprites';
 
-export const start = async (promise: Promise<any>, previousRender = null) => {
+export const start = async <T>(promise: Promise<T>, previousRender = null): Promise<T> => {
     let finished = false;
 
     const dots = ['', '.', '..', '...'];
