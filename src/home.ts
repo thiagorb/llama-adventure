@@ -10,7 +10,6 @@ import * as random from './random';
 import * as level from './level';
 import * as highscore from './highscore';
 import * as transitions from './transitions';
-import { fade } from './transitions';
 
 export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefined }) => {
     let finished = false;
@@ -81,12 +80,12 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         },
     ];
 
-    if (lastGame && lastGame.level !== tutorial.getLevel()) {
+    if (lastGame) {
         buttonsData.unshift({ label: 'REPLAY GAME', handler: () => startGame(Promise.resolve(game.create(lastGame.level))) });
     }
 
     const buttons = buttonsData.map((buttonData, index) => {
-        const button = ui.createButton(buttonData.label, 110, 100 + index * 30, 100, BUTTON_HEIGHT);
+        const button = ui.createButton(buttonData.label, 110, 80 + index * 30, 100, BUTTON_HEIGHT);
         return ({
             button,
             listener: ui.createListener(button, buttonData.handler),

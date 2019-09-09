@@ -1,5 +1,6 @@
 import * as map from './map';
 
+export const LOCAL_STORAGE_NAMESPACE = 'llama_adventure';
 export const PIXELS_PER_METER = 12;
 export const METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
 export const STEPS_PER_SECOND = 120;

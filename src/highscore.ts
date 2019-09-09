@@ -1,66 +1,21 @@
 import * as ui from './ui';
 import * as transitions from './transitions';
-import { BUTTON_HEIGHT, canvas, context } from './consts';
+import { BUTTON_HEIGHT, canvas, context, LOCAL_STORAGE_NAMESPACE } from './consts';
+
+export const MAX_ENTRIES = 10;
+export const MAX_NAME_LENGTH = 10;
+
+export interface Entry {
+    name: string;
+    world: number;
+    time: number;
+    score: number;
+}
 
 export const start = (background, nextScreen) => {
     let finished = false;
 
-    const highscore = [
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-        {
-            name: 'THIAGO',
-            world: 992023,
-            time: 250,
-            score: 3000,
-        },
-    ];
+    const highscore = getHighscore();
 
     const render = (timestamp) => {
         background(timestamp);
@@ -77,16 +32,16 @@ export const start = (background, nextScreen) => {
         context.fillText('SCORE', 232, 30);
 
         for (let i = 0; i < 10; i++) {
-            const {
-                name = '---',
-                world = '---',
-                time = '---',
-                score = '---',
-            } = highscore[i] || {};
-            context.fillText(name, 36, 45 + i * 15);
-            context.fillText(world as string, 112, 45 + i * 15);
-            context.fillText(time as string, 182, 45 + i * 15);
-            context.fillText(score as string, 232, 45 + i * 15);
+            const entry = highscore[i] || {
+                name: '---',
+                world: '---',
+                time: '---',
+                score: '---',
+            };
+            context.fillText(entry.name, 36, 45 + i * 15);
+            context.fillText(entry.world as string, 112, 45 + i * 15);
+            context.fillText(entry.time as string, 182, 45 + i * 15);
+            context.fillText(entry.score as string, 232, 45 + i * 15);
         }
 
         ui.drawButton(okayButton);
@@ -111,4 +66,32 @@ export const start = (background, nextScreen) => {
     };
 
     transitions.fade({ time: 300, from: 0, to: 0.5, render: background }).then(loop);
+};
+
+type Subset<T extends U, U> = U;
+export const compareHighscore = (a: Subset<Entry, { score, time }>, b: Subset<Entry, { score, time }>) => {
+    if (a.score > b.score) {
+        return -1;
+    }
+
+    if (a.score < b.score) {
+        return 1;
+    }
+
+    return a.time - b.time;
+};
+
+export const register = (entry: Entry) => {
+    const highscore = getHighscore()
+        .concat([entry])
+        .sort(compareHighscore)
+        .slice(0, MAX_ENTRIES);
+
+    localStorage.setItem(`${LOCAL_STORAGE_NAMESPACE}.highscore`, JSON.stringify(highscore));
+};
+
+export const getHighscore = (): Array<Entry> => {
+    const storage = localStorage.getItem(`${LOCAL_STORAGE_NAMESPACE}.highscore`);
+
+    return storage ? JSON.parse(storage): [];
 };

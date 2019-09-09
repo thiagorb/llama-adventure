@@ -19,6 +19,7 @@ import * as transitions from './transitions';
 import * as after from './after';
 import * as level from './level';
 import * as tunnel from './tunnel';
+import * as tutorial from './tutorial';
 import { deepCopy } from './utils';
 import { getKeys } from './keys';
 
@@ -63,9 +64,10 @@ export const renderText = (game: Game) => {
     context.font = '10px sans-serif';
     context.fillStyle = 'white';
     context.textAlign = 'left';
-    context.fillText(`SCORE: ${game.score}`, 5, 10);
+    context.fillText(`SCORE: ${game.score}`, 5, 5);
+    context.fillText(`TIME: ${Math.floor(game.time)}`, 5, 15);
     context.textAlign = 'right';
-    context.fillText(`WORLD #${game.level.id}`, 315, 10);
+    context.fillText(game.level.id === tutorial.LEVEL_ID ? 'TUTORIAL' : `WORLD #${game.level.id}`, 315, 5);
 };
 
 export const render = (game: Game) => {
@@ -169,6 +171,8 @@ export const step = (game: Game, steps: number) => {
             sound.play('win');
         }
     }
+
+    game.time += steps / STEPS_PER_SECOND;
 };
 
 export const createAnimationFrame = (game: Game, stepFunction: typeof step, renderFunction: typeof render) => {
@@ -215,6 +219,7 @@ export interface Game {
     status: Status;
     tunnel: tunnel.Tunnel;
     playerLocked: boolean;
+    time: number;
 }
 
 export const create = (level: level.Level): Game => {
@@ -233,6 +238,7 @@ export const create = (level: level.Level): Game => {
         status: Status.Playing,
         tunnel: null,
         playerLocked: false,
+        time: 0,
     };
 };
 

@@ -29,7 +29,7 @@ export const getKeys = cachedInstance(() => {
     const flagKey = key => state[key] = true;
     const unflagKey = key => state[key] = false;
 
-    const filterKey = callback => event => {
+    const filterKey = callback => (event: KeyboardEvent) => {
         const key = keyMap[event.key.toLowerCase()];
         if (key) {
             callback(key);

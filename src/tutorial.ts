@@ -3,8 +3,10 @@ import * as matrix from './matrix';
 import * as level from './level';
 import * as game from './game';
 import * as random from './random';
-import { context, METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
+import { METERS_PER_PIXEL, PLAYER_HEIGHT, TILE_SIZE } from './consts';
 import { cachedInstance } from './utils';
+
+export const LEVEL_ID = -1;
 
 export const getLevel = cachedInstance((): level.Level => {
     const WIDTH = 200;
@@ -48,7 +50,7 @@ export const getLevel = cachedInstance((): level.Level => {
     other.other = door;
 
     return {
-        id: -1,
+        id: LEVEL_ID,
         map: tutorialMap,
         surfaces: null,
         regions: null,

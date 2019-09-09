@@ -1,11 +1,15 @@
-import { BUTTON_HEIGHT, canvas, context } from './consts';
+import { canvas, context } from './consts';
 
-interface Button {
+export interface Button {
     label: string;
     x: number;
     y: number;
     width: number;
     height: number;
+}
+
+export interface Listener {
+    remove: () => void;
 }
 
 export const createButton = (label: string, x: number, y: number, width: number, height: number): Button => ({
@@ -43,7 +47,7 @@ export const mapCoordinates = callback => (clientX, clientY) => {
     callback(x, y);
 };
 
-export const createListener = (button: Button, callback) => {
+export const createListener = (button: Button, callback): Listener => {
     const checkButton = (x, y) => {
         if (x >= button.x && x < button.x + button.width && y >= button.y && y < button.y + button.height) {
             callback();

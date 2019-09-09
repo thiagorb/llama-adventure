@@ -1,7 +1,9 @@
 import * as ui from './ui';
 import * as transitions from './transitions';
-import * as home from './home';
 import * as game from './game';
+import * as score from './score';
+import * as home from './home';
+import * as tutorial from './tutorial';
 import { BUTTON_HEIGHT, canvas, context } from './consts';
 
 export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGame: () => void }) => {
@@ -36,8 +38,13 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
     const okayListener = ui.createListener(okayButton, async () => {
         finished = true;
         okayListener.remove();
-        await transitions.fade({ time: 500, from: 0.5, to: 1, render: renderGame });
-        home.start({ lastGame });
+        if (lastGame.level.id === tutorial.LEVEL_ID) {
+            await transitions.fade({ time: 500, from: 0.5, to: 1, render: renderGame });
+            home.start();
+        } else {
+            await transitions.fade({ time: 500, from: 0.5, to: 0, render: renderGame });
+            score.start({ lastGame, renderGame });
+        }
     });
 
     const loop = () => {

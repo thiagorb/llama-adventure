@@ -79,8 +79,8 @@ export const start = async (debugGame: game.Game) => {
 
         game.renderText(debugGame);
         context.textAlign = 'left';
-        context.fillText(sps.toString(), 5, 20);
-        context.fillText(fps.toString(), 5, 30);
+        context.fillText(sps.toString(), 5, 30);
+        context.fillText(fps.toString(), 5, 40);
 
         frameCount++;
     };
