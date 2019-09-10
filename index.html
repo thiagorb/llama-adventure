@@ -80,11 +80,29 @@
             [data-touch-key].is-active {
                 background: rgba(255, 255, 255, 0.2);
             }
+
+            #share {
+                opacity: 0;
+                position: absolute;
+                display: none;
+                left: 21.9%;
+                top: 74.7%;
+                width: 30.5%;
+                height: 7%;
+                cursor: pointer;
+            }
+
+            #share.is-visible {
+                display: block;
+            }
         </style>
     </head>
     <body>
         <div id="container">
-            <canvas width="320" height="240"></canvas>
+            <div style="position: relative">
+                <canvas width="320" height="240"></canvas>
+                <input type="text" id="share" />
+            </div>
             <div data-touch-key="ArrowUp">↑</div>
             <div data-touch-key="ArrowLeft">←</div>
             <div data-touch-key="ArrowRight">→</div>

@@ -243,6 +243,7 @@ export const create = (level: level.Level): Game => {
 
 export const start = async (game: Game, stepFunction = step, renderFunction = render) => {
     document.body.classList.add('is-playing');
+    history.replaceState(null, document.title, `${location.pathname}${location.search}#${game.level.id}`);
     const animationFrame = createAnimationFrame(game, stepFunction, renderFunction);
     const loop = loopFactory(game, animationFrame, renderFunction);
     await transitions.fade({ render: animationFrame, from: 1, to: 0, time: 2000 }).then(loop);
