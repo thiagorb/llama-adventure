@@ -1,7 +1,7 @@
 import * as game from './game';
 import * as worker from './worker';
 import * as ui from './ui';
-import { BUTTON_HEIGHT, canvas, context, SCREEN_HEIGHT, SCREEN_WIDTH } from './consts';
+import { BUTTON_HEIGHT, canvas, context, DEFAULT_FONT, SCREEN_HEIGHT, SCREEN_WIDTH } from './consts';
 import * as tutorial from './tutorial';
 import * as loading from './loading';
 import * as debug from './debug';
@@ -49,7 +49,11 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
         context.fillRect(0, 0, canvas.width, canvas.height);
         context.fillStyle = 'white';
         context.textAlign = 'center';
+        context.font = '16px/20px sans-serif';
         context.fillText('LLAMA ADVENTURE', 160, 50);
+        context.font = DEFAULT_FONT;
+        context.textAlign = 'right';
+        context.fillText('CREATED BY THIAGO ROMÃO BARCALA', SCREEN_WIDTH - 10, SCREEN_HEIGHT - 15);
         buttons.forEach(({ button }) => ui.drawButton(button));
     };
 
@@ -97,7 +101,7 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     }
 
     const buttons = buttonsData.map((buttonData, index) => {
-        const button = ui.createButton(buttonData.label, 110, 80 + index * 30, 100, BUTTON_HEIGHT);
+        const button = ui.createButton(buttonData.label, 110, 80 + index * 25, 100, BUTTON_HEIGHT);
         return ({
             button,
             listener: ui.createListener(button, buttonData.handler),

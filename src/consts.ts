@@ -1,6 +1,7 @@
 import * as map from './map';
 
 export const LOCAL_STORAGE_NAMESPACE = 'llama_adventure';
+export const DEFAULT_FONT = '10px/12px sans-serif';
 export const PIXELS_PER_METER = 12;
 export const METERS_PER_PIXEL = 1 / PIXELS_PER_METER;
 export const STEPS_PER_SECOND = 120;
@@ -24,5 +25,5 @@ export const context = canvas && canvas.getContext('2d');
 context && (
     context.imageSmoothingEnabled = false,
     context.textBaseline = 'top',
-    context.font = '10px/12px sans-serif'
+    context.font = DEFAULT_FONT
 );
