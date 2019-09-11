@@ -63,7 +63,6 @@ export const getSimulatedMovements = cachedInstance((): Array<Array<BoundingBox>
     const keys = {
         ArrowUp: false,
         ArrowRight: false,
-        ArrowDown: false,
         ArrowLeft: false,
     };
 

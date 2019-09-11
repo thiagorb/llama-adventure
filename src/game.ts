@@ -142,7 +142,6 @@ const checkItemsCollection = (game: Game) => {
 const lockedKeys = {
     ArrowUp: false,
     ArrowLeft: false,
-    ArrowDown: false,
     ArrowRight: false,
 };
 

@@ -3,7 +3,6 @@ import { cachedInstance } from './utils';
 export interface Keys {
     readonly ArrowUp: boolean;
     readonly ArrowRight: boolean;
-    readonly ArrowDown: boolean;
     readonly ArrowLeft: boolean;
 }
 
@@ -11,18 +10,15 @@ export const getKeys = cachedInstance(() => {
     const state = {
         ArrowUp: false,
         ArrowRight: false,
-        ArrowDown: false,
         ArrowLeft: false,
     };
 
     const keyMap = {
         arrowup: 'ArrowUp',
         arrowleft: 'ArrowLeft',
-        arrowdown: 'ArrowDown',
         arrowright: 'ArrowRight',
         w: 'ArrowUp',
         a: 'ArrowLeft',
-        s: 'ArrowDown',
         d: 'ArrowRight',
     };
 
