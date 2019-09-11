@@ -15,7 +15,11 @@ module.exports = {
         new HtmlWebpackPlugin({
             hash: true,
             template: './index.html',
-            filename: 'index.html'
+            filename: 'index.html',
+            minify: {
+                collapseWhitespace: true,
+                minifyCSS: true,
+            }
         })
     ],
     module: {
