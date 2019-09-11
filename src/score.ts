@@ -11,7 +11,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
     const timeBonus = lastGame.status === game.Status.Won ? Math.floor(5000 / Math.log(100 + time)) : 0;
     const score = lastGame.score + timeBonus;
 
-    const isHighscore = highscore
+    const isHighscore = score > 0 && highscore
         .getHighscore()
         .filter(entry => highscore.compareHighscore(entry, { score, time }) <= 0)
         .length < highscore.MAX_ENTRIES - 1;

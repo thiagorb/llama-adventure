@@ -31,6 +31,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
         shareInput.style.top = `${100 * shareButton.y / SCREEN_HEIGHT}%`;
         shareInput.style.height = `${100 * shareButton.height / SCREEN_HEIGHT}%`;
         shareInput.addEventListener('click', shareClickHandler);
+        shareInput.addEventListener('touchend', shareClickHandler);
     }
 
     const render = () => {
@@ -66,6 +67,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
         history.replaceState(null, document.title, `${location.pathname}${location.search}`);
         shareInput.classList.remove('is-visible');
         shareInput.removeEventListener('click', shareClickHandler);
+        shareInput.removeEventListener('touchend', shareClickHandler);
         if (isTutorial) {
             await transitions.fade({ time: 500, from: 0.5, to: 1, render: renderGame });
             home.start();

@@ -74,7 +74,15 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     };
 
     const buttonsData = [
-        { label: 'PLAY GAME', handler: () => startGame(worker.createLevel(Math.random() * level.MAX_LEVEL_ID).then(game.create)) },
+        { 
+            label: 'PLAY GAME', handler: () => {
+                let id = parseInt(location.hash.replace('#', ''));
+                if (Number.isNaN(id) || id < 0 || id > level.MAX_LEVEL_ID) {
+                    id = Math.random() * level.MAX_LEVEL_ID;
+                }
+                startGame(worker.createLevel(id).then(game.create))
+            }
+        },
         {
             label: 'SELECT WORLD',
             handler: () => {

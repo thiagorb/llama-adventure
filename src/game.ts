@@ -20,6 +20,7 @@ import * as after from './after';
 import * as level from './level';
 import * as tunnel from './tunnel';
 import * as tutorial from './tutorial';
+import * as pause from './pause';
 import { deepCopy } from './utils';
 import { getKeys } from './keys';
 
@@ -187,9 +188,14 @@ export const createAnimationFrame = (game: Game, stepFunction: typeof step, rend
 };
 
 export const loopFactory = (game: Game, animationFrame: ReturnType<typeof createAnimationFrame>, renderFunction: typeof render) => {
+    let previousEscape = false;
     const loop = (timestamp: number) => {
         animationFrame(timestamp);
-        if (game.status === Status.Playing) {
+        if (previousEscape && !getKeys().Escape) {
+            const render = () => renderFunction(game);
+            transitions.fade({ render, from: 0, to: 0.5, time: 500 })
+                .then(() => pause.start({ pausedGame: game, gameLoop: loop, renderGame: () => renderFunction(game) }));
+        } else if (game.status === Status.Playing) {
             window.requestAnimationFrame(loop);
         } else {
             document.body.classList.remove('is-playing');
@@ -197,6 +203,7 @@ export const loopFactory = (game: Game, animationFrame: ReturnType<typeof create
             transitions.fade({ render, from: 0, to: 0.5, time: 2000 })
                 .then(() => after.start({ lastGame: game, renderGame: render }));
         }
+        previousEscape = getKeys().Escape;
     };
 
     return loop;
@@ -242,7 +249,9 @@ export const create = (level: level.Level): Game => {
 
 export const start = async (game: Game, stepFunction = step, renderFunction = render) => {
     document.body.classList.add('is-playing');
-    history.replaceState(null, document.title, `${location.pathname}${location.search}#${game.level.id}`);
+    if (game.level.id !== tutorial.LEVEL_ID) {
+        history.replaceState(null, document.title, `${location.pathname}${location.search}#${game.level.id}`);
+    }
     const animationFrame = createAnimationFrame(game, stepFunction, renderFunction);
     const loop = loopFactory(game, animationFrame, renderFunction);
     await transitions.fade({ render: animationFrame, from: 1, to: 0, time: 2000 }).then(loop);

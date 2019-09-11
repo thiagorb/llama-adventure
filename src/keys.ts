@@ -11,12 +11,14 @@ export const getKeys = cachedInstance(() => {
         ArrowUp: false,
         ArrowRight: false,
         ArrowLeft: false,
+        Escape: false,
     };
 
     const keyMap = {
         arrowup: 'ArrowUp',
         arrowleft: 'ArrowLeft',
         arrowright: 'ArrowRight',
+        escape: 'Escape',
         w: 'ArrowUp',
         a: 'ArrowLeft',
         d: 'ArrowRight',
