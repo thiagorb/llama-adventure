@@ -134,15 +134,18 @@ export const render = (game: game.Game) => {
             depth * (1 - 2 * side),
             DOOR_HEIGHT
         );
+        context.save();
+        context.translate(door.position.x + depth * side, door.position.y);
+        context.scale(width, 1);
         sprites.draw(
             context,
             sprites.get('door'),
-            door.position.x + depth * side,
-            door.position.y,
-            width,
-            DOOR_HEIGHT,
-            side
+            0,
+            0,
+            1,
+            DOOR_HEIGHT
         );
+        context.restore();
     }
 };
 

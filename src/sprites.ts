@@ -1,79 +1,66 @@
 import { cachedInstance } from './utils';
 
 export interface Sprite {
-    readonly url: string;
-    readonly image: HTMLImageElement;
     readonly width: number;
     readonly height: number;
     readonly frames: number;
+    readonly position: number;
 }
 
 const sprites = {
     llama: {
-        url: require('../sprites/llama.png'),
         width: 12,
         height: 18,
         frames: 3,
-        image: null,
+        position: 0,
     },
     corn: {
-        url: require('../sprites/corn.png'),
         width: 9,
         height: 20,
         frames: 1,
-        image: null,
+        position: 4,
     },
     pepper: {
-        url: require('../sprites/pepper.png'),
         width: 9,
         height: 20,
         frames: 1,
-        image: null,
+        position: 7,
     },
     cactus: {
-        url: require('../sprites/cactus.png'),
         width: 14,
         height: 24,
         frames: 1,
-        image: null,
+        position: 3,
     },
     house: {
-        url: require('../sprites/house.png'),
         width: 20,
         height: 19,
         frames: 1,
-        image: null,
+        position: 6,
     },
     spikes: {
-        url: require('../sprites/spikes.png'),
         width: 10,
         height: 10,
         frames: 1,
-        image: null,
+        position: 8,
     },
     door: {
-        url: require('../sprites/door.png'),
         width: 16,
         height: 20,
         frames: 2,
-        image: null,
+        position: 5,
     }
 };
 
-export type SpriteCode = keyof typeof sprites;
+let image: HTMLImageElement = null;
 
-const load = (code: SpriteCode): Promise<HTMLImageElement> => new Promise(resolve => {
-    const sprite = sprites[code];
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.src = sprite.url;
-});
+export type SpriteCode = keyof typeof sprites;
 
 export const draw = (context: CanvasRenderingContext2D, sprite: Sprite, x: number, y: number, width = sprite.width, height = sprite.height, frame = 0) => {
     context.drawImage(
-        sprite.image,
+        image,
         0,
-        sprite.height * ((frame | 0) % sprite.frames),
+        25 * ((frame | 0) % sprite.frames + sprite.position),
         sprite.width,
         sprite.height,
         x,
@@ -87,10 +74,8 @@ export const get = (code: SpriteCode): Sprite => sprites[code];
 
 export const getFrames = (code: SpriteCode) => sprites[code].frames;
 
-export const initialize = cachedInstance(async (): Promise<void> => {
-    const promises = [];
-    for (let code in sprites) {
-        promises.push(load(code as SpriteCode).then(s => sprites[code].image = s));
-    }
-    await Promise.all(promises);
-});
+export const initialize = cachedInstance(() => new Promise(resolve => {
+    image = new Image();
+    image.onload = () => resolve(image);
+    image.src = require('../sprites/sprites.png');
+}));
