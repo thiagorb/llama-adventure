@@ -24,6 +24,8 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     let mapSpeedX = speed * Math.cos(direction);
     let mapSpeedY = speed * Math.sin(direction);
     let previousTimestamp = null;
+    const sharedId = parseInt(location.hash.replace('#', ''));
+    history.replaceState(null, document.title, `${location.pathname}${location.search}`);
 
     const renderBackground = timestamp => {
         const elapsedSeconds = previousTimestamp === null ? 0 : (timestamp - previousTimestamp) / 1000;
@@ -76,10 +78,10 @@ export const start = ({ lastGame }: { lastGame: game.Game } = { lastGame: undefi
     const buttonsData = [
         { 
             label: 'PLAY GAME', handler: () => {
-                let id = parseInt(location.hash.replace('#', ''));
-                if (Number.isNaN(id) || id < 0 || id > level.MAX_LEVEL_ID) {
-                    id = Math.random() * level.MAX_LEVEL_ID;
-                }
+                const id = Number.isNaN(sharedId) || sharedId < 0 || sharedId > level.MAX_LEVEL_ID
+                    ? Math.random() * level.MAX_LEVEL_ID
+                    : sharedId;
+
                 startGame(worker.createLevel(id).then(game.create))
             }
         },

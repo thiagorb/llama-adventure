@@ -18,6 +18,7 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
 
     let shared = false;
     const shareClickHandler = () => {
+        shareInput.value = `${location.origin}${location.pathname}${location.search}#${lastGame.level.id}`;
         shareInput.select();
         document.execCommand('copy');
         setTimeout(() => shared = false, 3000);
@@ -64,7 +65,6 @@ export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGam
     const okayListener = ui.createListener(okayButton, async () => {
         finished = true;
         okayListener.remove();
-        history.replaceState(null, document.title, `${location.pathname}${location.search}`);
         shareInput.classList.remove('is-visible');
         shareInput.removeEventListener('click', shareClickHandler);
         shareInput.removeEventListener('touchend', shareClickHandler);
