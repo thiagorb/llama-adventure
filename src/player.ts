@@ -1,6 +1,6 @@
 import {
     context,
-    HORIZONTAL_ACCELERATION,
+    HORIZONTAL_ACCELERATION, METERS_PER_PIXEL,
     METERS_PER_SECOND,
     METERS_PER_SECOND_PER_SECOND,
     PLAYER_HEIGHT,
@@ -71,7 +71,7 @@ export const update = (keys: Keys, current: state.Player, next: state.Player) =>
     next.frame = (current.frame + 4 / STEPS_PER_SECOND) % sprites.getFrames('llama');
 };
 
-export const render = (player: state.Player) => {
+export const render = (player: state.Player, sombrero: boolean) => {
     context.save();
     context.translate(player.position.x, player.position.y);
     if (player.left) {
@@ -80,5 +80,18 @@ export const render = (player: state.Player) => {
     }
 
     sprites.draw(context, sprites.get('llama'), 0, 0, PLAYER_WIDTH, PLAYER_HEIGHT, player.frame);
+
+    if (sombrero) {
+        const sombreroSprite = sprites.get('llamaSombrero');
+        sprites.draw(
+            context,
+            sombreroSprite,
+            2 * METERS_PER_PIXEL,
+            ((-3 - Math.floor(player.frame)) * METERS_PER_PIXEL),
+            sombreroSprite.width * METERS_PER_PIXEL,
+            sombreroSprite.height * METERS_PER_PIXEL
+        );
+    }
+
     context.restore();
 };

@@ -49,7 +49,31 @@ const sprites = {
         height: 20,
         frames: 2,
         position: 5,
-    }
+    },
+    taco: {
+        width: 20,
+        height: 20,
+        frames: 1,
+        position: 9,
+    },
+    maracas: {
+        width: 15,
+        height: 19,
+        frames: 1,
+        position: 10,
+    },
+    sombrero: {
+        width: 13,
+        height: 8,
+        frames: 1,
+        position: 11,
+    },
+    llamaSombrero: {
+        width: 13,
+        height: 8,
+        frames: 1,
+        position: 12,
+    },
 };
 
 let image: HTMLImageElement = null;

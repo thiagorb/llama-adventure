@@ -11,7 +11,7 @@ import * as game from './game';
 import * as level from './level';
 import * as sprites from './sprites';
 
-const enum State {
+export const enum State {
     Opening,
     Entering,
     Leaving,

@@ -42,7 +42,8 @@ export const renderWorld = (game: Game) => {
         }
     }
 
-    player.render(game.player.current);
+    player.render(game.player.current, game.sombrero && (!game.tunnel || game.tunnel.state === tunnel.State.Closing || game.tunnel.state === tunnel.State.Opening));
+
     tunnel.renderFade(game);
 };
 
@@ -137,6 +138,9 @@ const checkItemsCollection = (game: Game) => {
         sound.play('collect');
         game.collectedItems[i] = true;
         game.score += item.score;
+        if (item.sprite === 'sombrero') {
+            game.sombrero = true;
+        }
     }
 };
 
@@ -224,6 +228,7 @@ export interface Game {
     status: Status;
     tunnel: tunnel.Tunnel;
     playerLocked: boolean;
+    sombrero: boolean;
     time: number;
 }
 
@@ -243,6 +248,7 @@ export const create = (level: level.Level): Game => {
         status: Status.Playing,
         tunnel: null,
         playerLocked: false,
+        sombrero: false,
         time: 0,
     };
 };

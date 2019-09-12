@@ -95,15 +95,27 @@ export const createItem = (type: ItemType, x: number, y: number): Item => {
 const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number }> = [
     {
         sprite: 'corn',
-        score: 10,
+        score: 5,
     },
     {
         sprite: 'pepper',
-        score: 20,
+        score: 10,
     },
     {
         sprite: 'cactus',
+        score: 20,
+    },
+    {
+        sprite: 'taco',
         score: 50,
+    },
+    {
+        sprite: 'maracas',
+        score: 100,
+    },
+    {
+        sprite: 'sombrero',
+        score: 200,
     },
 ];
 
@@ -118,7 +130,7 @@ const randomizeItems = (randomizer: random.Randomizer, surface: Surface): Array<
 
     for (let i = 0; i < surface.length; i += 5) {
         const cell = surface[Math.floor(i)];
-        const type = Math.floor(Math.pow(random.get(randomizer), 3) * 3);
+        const type = Math.floor(Math.pow(random.get(randomizer), 3) * itemsPrototypes.length);
         items.push(createItem(type, cell.col * TILE_SIZE, cell.row * TILE_SIZE));
     }
     return items.sort((a, b) => a.position.x - b.position.x);
