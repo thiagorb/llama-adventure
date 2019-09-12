@@ -5,6 +5,7 @@ import * as sprites from './sprites';
 import * as simulation from './simulation';
 import * as state from './state';
 import * as random from './random';
+import { cachedInstance } from './utils';
 
 export const MAX_LEVEL_ID = 999999;
 
@@ -92,30 +93,36 @@ export const createItem = (type: ItemType, x: number, y: number): Item => {
     };
 };
 
-const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number }> = [
+const itemsPrototypes: Array<{ sprite: sprites.SpriteCode, score: number, frequency: number }> = [
     {
         sprite: 'corn',
-        score: 5,
+        score: 3,
+        frequency: 220,
     },
     {
         sprite: 'pepper',
-        score: 10,
+        score: 15,
+        frequency: 55,
     },
     {
         sprite: 'cactus',
-        score: 20,
+        score: 25,
+        frequency: 25,
     },
     {
         sprite: 'taco',
         score: 50,
-    },
-    {
-        sprite: 'maracas',
-        score: 100,
+        frequency: 10,
     },
     {
         sprite: 'sombrero',
-        score: 200,
+        score: 100,
+        frequency: 2,
+    },
+    {
+        sprite: 'maracas',
+        score: 300,
+        frequency: 0.5
     },
 ];
 
@@ -125,13 +132,28 @@ export const enum ItemType {
     Cactus
 }
 
+const getSumOfFrequencies = cachedInstance(() => itemsPrototypes.reduce((acc, i) => i.frequency + acc, 0));
+
+const randomizeItemType = (randomizer: random.Randomizer) => {
+    let n = random.get(randomizer);
+
+    for (let i = itemsPrototypes.length - 1; i > 0; i--) {
+        const frequency = itemsPrototypes[i].frequency / getSumOfFrequencies();
+        if (n < frequency) {
+            return i;
+        }
+        n -= frequency;
+    }
+
+    return 0;
+};
+
 const randomizeItems = (randomizer: random.Randomizer, surface: Surface): Array<Item> => {
     const items: Array<Item> = [];
 
     for (let i = 0; i < surface.length; i += 5) {
         const cell = surface[Math.floor(i)];
-        const type = Math.floor(Math.pow(random.get(randomizer), 3) * itemsPrototypes.length);
-        items.push(createItem(type, cell.col * TILE_SIZE, cell.row * TILE_SIZE));
+        items.push(createItem(randomizeItemType(randomizer), cell.col * TILE_SIZE, cell.row * TILE_SIZE));
     }
     return items.sort((a, b) => a.position.x - b.position.x);
 };
