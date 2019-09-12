@@ -8,7 +8,9 @@ import * as home from './home';
 export const start = ({ lastGame, renderGame }: { lastGame: game.Game, renderGame: () => void }) => {
     let finished = false;
     const time = Math.floor(lastGame.time);
-    const timeBonus = lastGame.status === game.Status.Won ? Math.floor(5000 / Math.log(100 + time)) : 0;
+    const timeBonus = lastGame.status === game.Status.Won
+        ? Math.floor((Math.PI / 2 + Math.atan((100 - time) / 100)) * 900)
+        : 0;
     const score = lastGame.score + timeBonus;
 
     const isHighscore = score > 0 && highscore
